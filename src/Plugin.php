@@ -201,4 +201,15 @@ class Plugin extends CraftPlugin
             ]
         );
     }
+
+    // Private Methods
+    // =========================================================================
+
+    private function _registerHooks()
+    {
+        Craft::$app->view->hook('cp.commerce.product.edit.details', function(array &$context) {
+            // $context['foo'] = 'bar';
+            return Craft::$app->view->renderTemplate(self::PLUGIN_HANDLE . '/_components/hooks/cp-commerce-product-edit-details');
+        });
+    }
 }
