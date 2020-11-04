@@ -1,0 +1,24 @@
+{# @var craft \craft\web\twig\variables\CraftVariable #}
+{#
+/**
+ * Craft Commerce Untitled plugin for Craft CMS 3.x
+ *
+ * VariantsTable Field Input
+ *
+ * @author    Josh Smith
+ * @copyright Copyright (c) 2020 Josh Smith
+ * @link      https://www.batch.nz
+ * @package   CraftCommerceUntitled
+ * @since     1.0.0
+ */
+#}
+
+{% import "_includes/forms" as forms %}
+
+{{ forms.textField({
+        label: 'Some Field',
+        instructions: 'Enter some text here.',
+        id: name,
+        name: name,
+        value: value})
+}}
