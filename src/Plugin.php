@@ -10,20 +10,30 @@
 
 namespace batchnz\craftcommerceuntitled;
 
-use batchnz\craftcommerceuntitled\services\VariantConfigurations as VariantConfigurationsService;
-use batchnz\craftcommerceuntitled\models\Settings;
+use batchnz\craftcommerceuntitled\behaviors\ConfigurableProductBehavior;
 use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationElement;
+use batchnz\craftcommerceuntitled\enums\ProductVariantType;
 use batchnz\craftcommerceuntitled\fields\VariantsTable as VariantsTableField;
+use batchnz\craftcommerceuntitled\models\Settings;
+use batchnz\craftcommerceuntitled\services\Products as ProductsService;
+use batchnz\craftcommerceuntitled\services\VariantConfigurations as VariantConfigurationsService;
 
 use Craft;
 use craft\base\Plugin as CraftPlugin;
-use craft\services\Plugins;
+use craft\base\Element;
+use craft\events\DefineBehaviorsEvent;
+use craft\events\ModelEvent;
 use craft\events\PluginEvent;
-use craft\web\UrlManager;
-use craft\services\Elements;
-use craft\services\Fields;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\events\TemplateEvent;
+use craft\services\Elements;
+use craft\services\Fields;
+use craft\services\Plugins;
+use craft\web\View;
+use craft\web\UrlManager;
+
+use craft\commerce\elements\Product as CommerceProduct;
 
 use yii\base\Event;
 
@@ -77,7 +87,7 @@ class Plugin extends CraftPlugin
      *
      * @var bool
      */
-    public $hasCpSettings = true;
+    public $hasCpSettings = false;
 
     /**
      * Set to `true` if the plugin should have its own section (main nav item) in the control panel.
@@ -105,44 +115,8 @@ class Plugin extends CraftPlugin
         parent::init();
         self::$plugin = $this;
 
-        // Register our CP routes
-        Event::on(
-            UrlManager::class,
-            UrlManager::EVENT_REGISTER_CP_URL_RULES,
-            function (RegisterUrlRulesEvent $event) {
-                $event->rules['cpActionTrigger1'] = self::PLUGIN_HANDLE . '/variant-configuration/do-something';
-            }
-        );
-
-        // Register our elements
-        Event::on(
-            Elements::class,
-            Elements::EVENT_REGISTER_ELEMENT_TYPES,
-            function (RegisterComponentTypesEvent $event) {
-                $event->types[] = VariantConfigurationElement::class;
-            }
-        );
-
-        // Register our fields
-        Event::on(
-            Fields::class,
-            Fields::EVENT_REGISTER_FIELD_TYPES,
-            function (RegisterComponentTypesEvent $event) {
-                $event->types[] = VariantsTableField::class;
-            }
-        );
-
-        // Do something after we're installed
-        Event::on(
-            Plugins::class,
-            Plugins::EVENT_AFTER_INSTALL_PLUGIN,
-            function (PluginEvent $event) {
-                if ($event->plugin === $this) {
-                    // We were just installed
-                }
-            }
-        );
-
+        $this->_registerComponents();
+        $this->_registerEvents();
         $this->_registerHooks();
 
         /**
@@ -173,6 +147,16 @@ class Plugin extends CraftPlugin
         );
     }
 
+    /**
+     * Returns the products service
+     * @author Josh Smith <josh@batch.nz>
+     * @return batchnz\craftcommerceuntitled\services\Products
+     */
+    public function getProducts()
+    {
+        return $this->get('products');
+    }
+
     // Protected Methods
     // =========================================================================
 
@@ -196,20 +180,90 @@ class Plugin extends CraftPlugin
     {
         return Craft::$app->view->renderTemplate(
             self::PLUGIN_HANDLE . '/settings',
-            [
-                'settings' => $this->getSettings()
-            ]
+            ['settings' => $this->getSettings()]
         );
     }
 
     // Private Methods
     // =========================================================================
 
+    /**
+     * Register plugin services
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
+    private function _registerComponents()
+    {
+        Craft::$app->setComponents([
+            'products' => ProductsService::class
+        ]);
+    }
+
+    /**
+     * Register plugin event handlers
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
+    private function _registerEvents()
+    {
+         // Register our CP routes
+        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES,
+            function (RegisterUrlRulesEvent $event) {
+                $event->rules['cpActionTrigger1'] = self::PLUGIN_HANDLE . '/variant-configuration/do-something';
+            }
+        );
+
+        // Register our elements
+        Event::on(Elements::class, Elements::EVENT_REGISTER_ELEMENT_TYPES,
+            function (RegisterComponentTypesEvent $event) {
+                $event->types[] = VariantConfigurationElement::class;
+            }
+        );
+
+        // Register our fields
+        Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES,
+            function (RegisterComponentTypesEvent $event) {
+                $event->types[] = VariantsTableField::class;
+            }
+        );
+
+        // Register plugin behaviors
+        Event::on(
+            CommerceProduct::class, CommerceProduct::EVENT_DEFINE_BEHAVIORS, function(DefineBehaviorsEvent $event) {
+                $event->sender->attachBehaviors([
+                    ConfigurableProductBehavior::class
+                ]);
+            }
+        );
+
+        // Handle Commerce Product element save events
+        Event::on(CommerceProduct::class, Element::EVENT_AFTER_SAVE, function(ModelEvent $e) {
+            $this->getProducts()->handleProductSaveEvent($e);
+        });
+
+        // Handle Craft before page load event
+        Event::on(View::class, View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE, function(TemplateEvent $e){
+            if( strpos($e->template, 'commerce/products/') !== false ){
+                $this->getProducts()->handleProductBeforeRenderPageTemplateEvent($e);
+            }
+        });
+    }
+
+    /**
+     * Register plugin template hooks
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
     private function _registerHooks()
     {
         Craft::$app->view->hook('cp.commerce.product.edit.details', function(array &$context) {
-            // $context['foo'] = 'bar';
-            return Craft::$app->view->renderTemplate(self::PLUGIN_HANDLE . '/_components/hooks/cp-commerce-product-edit-details');
+            // Define an array of product variant types
+            $context['productVariantTypes'] = [
+                ProductVariantType::Standard => 'Standard',
+                ProductVariantType::Configurable => 'Configurable'
+            ];
+
+            return Craft::$app->view->renderTemplate(self::PLUGIN_HANDLE . '/_components/hooks/cp-commerce-product-edit-details', $context);
         });
     }
 }

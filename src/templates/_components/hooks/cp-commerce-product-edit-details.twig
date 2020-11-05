@@ -4,12 +4,15 @@
             <label id="label23432423" for="variant-type-field">Variant Type</label>
         </div>
         <div class="input ltr">
+            {% if productVariantTypes is defined and productVariantTypes|length %}
             <div class="select">
                 <select name="variantType">
-                    <option value="1" selected="selected">Standard</option>
-                    <option value="2">Configurable</option>
+                    {% for type, label in productVariantTypes %}
+                    <option value="{{ type }}" {% if product.variantType == type %}selected="selected"{% endif %}>{{ label }}</option>
+                    {% endfor %}
                 </select>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
