@@ -115,6 +115,7 @@ class Plugin extends CraftPlugin
         parent::init();
         self::$plugin = $this;
 
+        // Bootstrap plugin
         $this->_registerComponents();
         $this->_registerEvents();
         $this->_registerHooks();

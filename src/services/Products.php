@@ -53,12 +53,20 @@ class Products extends Component
     public function handleProductSaveEvent(ModelEvent $e)
     {
         $commerceProduct = $e->sender;
+        $variantType = Craft::$app->getRequest()->getBodyParam('variantType');
 
-        $product = new Product();
-        $product->id = $commerceProduct->id;
+        // Attempt to fetch an existing record
+        $product = Product::findOne($commerceProduct->id);
 
-        if( Product::findOne($commerceProduct->id) ){
-            $product->setIsNewRecord(false);
+        // ...And create a new one if we couldn't find one
+        if( empty($product) ){
+            $product = new Product();
+            $product->id = $commerceProduct->id;
+        }
+
+        // Save the variant type if it exists in the request
+        if( !empty($variantType) ){
+            $product->variantType = $variantType;
         }
 
         $product->save();
