@@ -16,7 +16,7 @@ use Craft;
 use yii\rest\Controller;
 
 /**
- * VariantConfiguration Controller
+ * VariantConfigurations Controller
  *
  * Generally speaking, controllers are the middlemen between the front end of
  * the CP/website and your plugin’s services. They contain action methods which
@@ -35,7 +35,7 @@ use yii\rest\Controller;
  * @package   CraftCommerceUntitled
  * @since     1.0.0
  */
-class ConfigurationsController extends Controller
+class VariantConfigurationsController extends Controller
 {
 
     // Protected Properties
@@ -59,7 +59,7 @@ class ConfigurationsController extends Controller
      */
     public function actionIndex()
     {
-        $result = 'Welcome to the ConfigurationsController actionIndex() method';
+        $result = 'Welcome to the VariantConfigurationsController actionIndex() method';
         return $this->asJson($result);
     }
 }

@@ -208,7 +208,7 @@ class Plugin extends CraftPlugin
                 $event->rules[] = [
                     'class' => 'yii\rest\UrlRule',
                     'controller' => [
-                        RoutesHelper::getApiRoute('configurations') => RoutesHelper::getApiController('configurations')
+                        RoutesHelper::getApiRoute('variant-configurations') => RoutesHelper::getApiController('variant-configurations')
                     ],
                     'except' => ['delete', 'create', 'update'],
                     'extraPatterns' => [
