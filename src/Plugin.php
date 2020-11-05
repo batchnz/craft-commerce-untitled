@@ -14,6 +14,7 @@ use batchnz\craftcommerceuntitled\behaviors\ConfigurableProductBehavior;
 use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationElement;
 use batchnz\craftcommerceuntitled\enums\ProductVariantType;
 use batchnz\craftcommerceuntitled\fields\VariantsTable as VariantsTableField;
+use batchnz\craftcommerceuntitled\helpers\Routes as RoutesHelper;
 use batchnz\craftcommerceuntitled\models\Settings;
 use batchnz\craftcommerceuntitled\services\Products as ProductsService;
 use batchnz\craftcommerceuntitled\services\VariantConfigurations as VariantConfigurationsService;
@@ -57,9 +58,11 @@ use yii\base\Event;
  */
 class Plugin extends CraftPlugin
 {
-    // Constants
-    // =========================================================================
-    public const PLUGIN_HANDLE = 'craft-commerce-untitled';
+    /**
+     * Defines a variable for the API slug
+     * @var string
+     */
+    public const API_TRIGGER = 'api';
 
     // Static Properties
     // =========================================================================
@@ -71,6 +74,7 @@ class Plugin extends CraftPlugin
      * @var CraftCommerceUntitled
      */
     public static $plugin;
+
 
     // Public Properties
     // =========================================================================
@@ -96,6 +100,12 @@ class Plugin extends CraftPlugin
      */
     public $hasCpSection = false;
 
+    /**
+     * Define the current API version
+     * @var string
+     */
+    public $apiVersion = 'v1';
+
     // Public Methods
     // =========================================================================
 
@@ -120,27 +130,9 @@ class Plugin extends CraftPlugin
         $this->_registerEvents();
         $this->_registerHooks();
 
-        /**
-         * Logging in Craft involves using one of the following methods:
-         *
-         * Craft::trace(): record a message to trace how a piece of code runs. This is mainly for development use.
-         * Craft::info(): record a message that conveys some useful information.
-         * Craft::warning(): record a warning message that indicates something unexpected has happened.
-         * Craft::error(): record a fatal error that should be investigated as soon as possible.
-         *
-         * Unless `devMode` is on, only Craft::warning() & Craft::error() will log to `craft/storage/logs/web.log`
-         *
-         * It's recommended that you pass in the magic constant `__METHOD__` as the second parameter, which sets
-         * the category to the method (prefixed with the fully qualified class name) where the constant appears.
-         *
-         * To enable the Yii debug toolbar, go to your user account in the AdminCP and check the
-         * [] Show the debug toolbar on the front end & [] Show the debug toolbar on the Control Panel
-         *
-         * http://www.yiiframework.com/doc-2.0/guide-runtime-logging.html
-         */
         Craft::info(
             Craft::t(
-                self::PLUGIN_HANDLE,
+                $this->id,
                 '{name} plugin loaded',
                 ['name' => $this->name]
             ),
@@ -180,7 +172,7 @@ class Plugin extends CraftPlugin
     protected function settingsHtml(): string
     {
         return Craft::$app->view->renderTemplate(
-            self::PLUGIN_HANDLE . '/settings',
+            $this->id . '/settings',
             ['settings' => $this->getSettings()]
         );
     }
@@ -208,9 +200,23 @@ class Plugin extends CraftPlugin
     private function _registerEvents()
     {
          // Register our CP routes
-        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES,
+        Event::on(
+            UrlManager::class,
+            UrlManager::EVENT_REGISTER_SITE_URL_RULES,
             function (RegisterUrlRulesEvent $event) {
-                $event->rules['cpActionTrigger1'] = self::PLUGIN_HANDLE . '/variant-configuration/do-something';
+                // Craft API Routes
+                $event->rules[] = [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => [
+                        RoutesHelper::getApiRoute('configurations') => RoutesHelper::getApiController('configurations')
+                    ],
+                    'except' => ['delete', 'create', 'update'],
+                    'extraPatterns' => [
+                        // 'GET profile' => 'profile',
+                        // 'GET updates' => 'updates',
+                        // 'PUT editions' => 'editions',
+                    ],
+                ];
             }
         );
 
@@ -264,7 +270,7 @@ class Plugin extends CraftPlugin
                 ProductVariantType::Configurable => 'Configurable'
             ];
 
-            return Craft::$app->view->renderTemplate(self::PLUGIN_HANDLE . '/_components/hooks/cp-commerce-product-edit-details', $context);
+            return Craft::$app->view->renderTemplate($this->id . '/_components/hooks/cp-commerce-product-edit-details', $context);
         });
     }
 }
