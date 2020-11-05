@@ -1,0 +1,23 @@
+{
+  "name": "craft-commerce-untitled",
+  "version": "1.0.0",
+  "description": "Easily generate and manage collections of Variants from their field types and values.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/batchnz/craft-commerce-untitled.git"
+  },
+  "author": "Josh Smith <me@joshsmith.dev>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/batchnz/craft-commerce-untitled/issues"
+  },
+  "homepage": "https://github.com/batchnz/craft-commerce-untitled#readme",
+  "devDependencies": {}
+}
