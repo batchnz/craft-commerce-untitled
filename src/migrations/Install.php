@@ -11,10 +11,15 @@
 namespace batchnz\craftcommerceuntitled\migrations;
 
 use batchnz\craftcommerceuntitled\Plugin;
+use batchnz\craftcommerceuntitled\enums\ProductVariantType;
+use batchnz\craftcommerceuntitled\records\Product;
+use batchnz\craftcommerceuntitled\records\VariantConfiguration;
 
 use Craft;
 use craft\config\DbConfig;
 use craft\db\Migration;
+
+use craft\commerce\records\Product as CommerceProduct;
 
 /**
  * Craft Commerce Untitled Install Migration
@@ -56,13 +61,14 @@ class Install extends Migration
     public function safeUp()
     {
         $this->driver = Craft::$app->getConfig()->getDb()->driver;
-        if ($this->createTables()) {
-            $this->createIndexes();
-            $this->addForeignKeys();
-            // Refresh the db schema caches
-            Craft::$app->db->schema->refresh();
-            $this->insertDefaultData();
-        }
+
+        $this->createTables();
+        $this->createIndexes();
+        $this->addForeignKeys();
+
+        // Refresh the db schema caches
+        Craft::$app->db->schema->refresh();
+        $this->insertDefaultData();
 
         return true;
     }
@@ -95,27 +101,37 @@ class Install extends Migration
      */
     protected function createTables()
     {
-        $tablesCreated = false;
+        // // craftcommerceuntitled_variantconfiguration table
+        // $tableSchema = Craft::$app->db->schema->getTableSchema(VariantConfiguration::tableName());
+        // if ($tableSchema === null) {
+        //     $this->createTable(
+        //         VariantConfiguration::tableName(),
+        //         [
+        //             'id' => $this->primaryKey(),
+        //             'dateCreated' => $this->dateTime()->notNull(),
+        //             'dateUpdated' => $this->dateTime()->notNull(),
+        //             'uid' => $this->uid(),
+        //         ]
+        //     );
+        // }
 
-    // craftcommerceuntitled_variantconfiguration table
-        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%craftcommerceuntitled_variantconfiguration}}');
+        // Products Table
+        $tableSchema = Craft::$app->db->schema->getTableSchema(Product::tableName());
         if ($tableSchema === null) {
-            $tablesCreated = true;
             $this->createTable(
-                '{{%craftcommerceuntitled_variantconfiguration}}',
+                Product::tableName(),
                 [
                     'id' => $this->primaryKey(),
+                    'variantType' => $this->enum('variantType', [
+                        ProductVariantType::Standard,
+                        ProductVariantType::Configurable
+                    ])->defaultValue(ProductVariantType::Standard)->notNull(),
                     'dateCreated' => $this->dateTime()->notNull(),
                     'dateUpdated' => $this->dateTime()->notNull(),
                     'uid' => $this->uid(),
-                // Custom columns in the table
-                    'siteId' => $this->integer()->notNull(),
-                    'some_field' => $this->string(255)->notNull()->defaultValue(''),
                 ]
             );
         }
-
-        return $tablesCreated;
     }
 
     /**
@@ -125,24 +141,7 @@ class Install extends Migration
      */
     protected function createIndexes()
     {
-    // craftcommerceuntitled_variantconfiguration table
-        $this->createIndex(
-            $this->db->getIndexName(
-                '{{%craftcommerceuntitled_variantconfiguration}}',
-                'some_field',
-                true
-            ),
-            '{{%craftcommerceuntitled_variantconfiguration}}',
-            'some_field',
-            true
-        );
-        // Additional commands depending on the db driver
-        switch ($this->driver) {
-            case DbConfig::DRIVER_MYSQL:
-                break;
-            case DbConfig::DRIVER_PGSQL:
-                break;
-        }
+
     }
 
     /**
@@ -152,12 +151,12 @@ class Install extends Migration
      */
     protected function addForeignKeys()
     {
-    // craftcommerceuntitled_variantconfiguration table
+        // Products Table Foreign Key
         $this->addForeignKey(
-            $this->db->getForeignKeyName('{{%craftcommerceuntitled_variantconfiguration}}', 'siteId'),
-            '{{%craftcommerceuntitled_variantconfiguration}}',
-            'siteId',
-            '{{%sites}}',
+            $this->db->getForeignKeyName(Product::tableName(), 'id'),
+            Product::tableName(),
+            'id',
+            CommerceProduct::tableName(),
             'id',
             'CASCADE',
             'CASCADE'
@@ -180,7 +179,7 @@ class Install extends Migration
      */
     protected function removeTables()
     {
-    // craftcommerceuntitled_variantconfiguration table
-        $this->dropTableIfExists('{{%craftcommerceuntitled_variantconfiguration}}');
+        $this->dropTableIfExists(VariantConfiguration::tableName());
+        $this->dropTableIfExists(Product::tableName());
     }
 }

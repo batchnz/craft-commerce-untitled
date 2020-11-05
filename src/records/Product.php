@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Craft Commerce Untitled plugin for Craft CMS 3.x
  *
@@ -10,28 +11,17 @@
 
 namespace batchnz\craftcommerceuntitled\records;
 
-use batchnz\craftcommerceuntitled\Plugin;
-
 use Craft;
 use craft\db\ActiveRecord;
 
 /**
  * VariantConfiguration Record
  *
- * ActiveRecord is the base class for classes representing relational data in terms of objects.
- *
- * Active Record implements the [Active Record design pattern](http://en.wikipedia.org/wiki/Active_record).
- * The premise behind Active Record is that an individual [[ActiveRecord]] object is associated with a specific
- * row in a database table. The object's attributes are mapped to the columns of the corresponding table.
- * Referencing an Active Record attribute is equivalent to accessing the corresponding table column for that record.
- *
- * http://www.yiiframework.com/doc-2.0/guide-db-active-record.html
- *
  * @author    Josh Smith
  * @package   CraftCommerceUntitled
  * @since     1.0.0
  */
-class VariantConfiguration extends ActiveRecord
+class Product extends ActiveRecord
 {
     // Public Static Methods
     // =========================================================================
@@ -50,6 +40,6 @@ class VariantConfiguration extends ActiveRecord
      */
     public static function tableName()
     {
-        return '{{%commerce_untitled_variantconfiguration}}';
+        return '{{%commerce_untitled_products}}';
     }
 }
