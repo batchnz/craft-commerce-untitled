@@ -33,23 +33,4 @@ class VariantConfigurations extends Component
     // Public Methods
     // =========================================================================
 
-    /**
-     * This function can literally be anything you want, and you can have as many service
-     * functions as you want
-     *
-     * From any other plugin file, call it like this:
-     *
-     *     CraftCommerceUntitled::$plugin->variantConfigurations->exampleService()
-     *
-     * @return mixed
-     */
-    public function exampleService()
-    {
-        $result = 'something';
-        // Check our Plugin's settings for `someAttribute`
-        if (CraftCommerceUntitled::$plugin->getSettings()->someAttribute) {
-        }
-
-        return $result;
-    }
 }
