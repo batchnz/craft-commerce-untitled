@@ -11,7 +11,7 @@
 namespace batchnz\craftcommerceuntitled\elements;
 
 use batchnz\craftcommerceuntitled\Plugin;
-use batchnz\craftcommerceuntitled\models\VariantConfigurationType;
+use batchnz\craftcommerceuntitled\records\VariantConfigurationType;
 use batchnz\craftcommerceuntitled\records\VariantConfiguration as VariantConfigurationRecord;
 use batchnz\craftcommerceuntitled\elements\db\VariantConfigurationQuery;
 

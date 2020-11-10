@@ -13,7 +13,10 @@ namespace batchnz\craftcommerceuntitled\records;
 use batchnz\craftcommerceuntitled\Plugin;
 
 use Craft;
+use craft\behaviors\FieldLayoutBehavior;
 use craft\db\ActiveRecord;
+
+use craft\commerce\Plugin as Commerce;
 
 /**
  * VariantConfiguration Record
@@ -35,5 +38,37 @@ class VariantConfigurationType extends ActiveRecord
     public static function tableName()
     {
         return '{{%commerce_untitled_variantconfiguration_types}}';
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        $behaviors = parent::behaviors();
+        $behaviors['fieldLayout'] = [
+            'class' => FieldLayoutBehavior::class,
+            'elementType' => VariantConfiguration::class,
+        ];
+        return $behaviors;
+    }
+
+    /**
+     * Returns the product type for this variant configuration type
+     * @author Josh Smith <josh@batch.nz>
+     * @return ProductType
+     */
+    public function getProductType()
+    {
+        return Commerce::getInstance()
+            ->getProductTypes()
+            ->getProductTypeById($this->productTypeId);
+    }
+
+    public function rules()
+    {
+        return [
+            [['id', 'productTypeId', 'fieldLayoutId', 'uid'], 'required']
+        ];
     }
 }

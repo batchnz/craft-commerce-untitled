@@ -12,8 +12,7 @@ namespace batchnz\craftcommerceuntitled\services;
 
 use batchnz\craftcommerceuntitled\Plugin;
 use batchnz\craftcommerceuntitled\elements\VariantConfiguration;
-use batchnz\craftcommerceuntitled\models\VariantConfigurationType;
-use batchnz\craftcommerceuntitled\records\VariantConfigurationType as VariantConfigurationTypeRecord;
+use batchnz\craftcommerceuntitled\records\VariantConfigurationType;
 
 use Craft;
 use craft\base\Component;
@@ -50,7 +49,7 @@ class VariantConfigurationTypes extends Component
      */
     public function getVariantConfigurationTypeById(int $id): VariantConfigurationType
     {
-        $variantConfigurationTypeRecord = VariantConfigurationTypeRecord::findOne($id);
+        $variantConfigurationTypeRecord = VariantConfigurationType::findOne($id);
 
         if( empty($variantConfigurationTypeRecord) ){
             throw new Exception('Failed to load variant configuration record.');
@@ -70,14 +69,13 @@ class VariantConfigurationTypes extends Component
      */
     public function getVariantConfigurationTypeByProductTypeId(int $productTypeId): VariantConfigurationType
     {
-        $variantConfigurationTypeRecord = VariantConfigurationTypeRecord::findOne(['productTypeId' => $productTypeId]);
+        $variantConfigurationType = VariantConfigurationType::findOne([
+            'productTypeId' => $productTypeId
+        ]);
 
-        if( empty($variantConfigurationTypeRecord) ){
+        if( empty($variantConfigurationType) ){
             throw new Exception('Failed to load variant configuration record');
         }
-
-        $variantConfigurationType = new VariantConfigurationType;
-        $variantConfigurationType->attributes = $variantConfigurationTypeRecord->toArray();
 
         return $variantConfigurationType;
     }
@@ -93,14 +91,6 @@ class VariantConfigurationTypes extends Component
     {
         $db = Craft::$app->getDb();
         $transaction = $db->beginTransaction();
-
-        // Attempt to load an existing record
-        $variantConfigurationTypeRecord = VariantConfigurationTypeRecord::findOne($variantConfigurationType->id);
-
-        // Create a new record
-        if( empty($variantConfigurationTypeRecord) ){
-            $variantConfigurationTypeRecord = new VariantConfigurationTypeRecord();
-        }
 
         try {
             // Fetch the variant field layout
@@ -123,15 +113,9 @@ class VariantConfigurationTypes extends Component
 
             // Assign properties to the record for saving
             $variantConfigurationType->fieldLayoutId = $fieldLayout->id;
-            $variantConfigurationTypeRecord->productTypeId = $variantConfigurationType->productTypeId;
-            $variantConfigurationTypeRecord->fieldLayoutId = $variantConfigurationType->fieldLayoutId;
 
             // Save the record
-            $variantConfigurationTypeRecord->save();
-
-            // Set additional properties
-            $variantConfigurationType->id = $variantConfigurationTypeRecord->id;
-            $variantConfigurationType->uid = $variantConfigurationTypeRecord->uid;
+            $variantConfigurationType->save();
 
             $transaction->commit();
         } catch (Throwable $e) {

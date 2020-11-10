@@ -103,8 +103,7 @@ class VariantConfigurationsController extends Controller
         $variantConfiguration->setFieldValuesFromRequest('fields');
 
         // Now save the element
-        $result = $elementsService->saveElement($variantConfiguration);
-        echo '<pre> $result: '; print_r($result); echo '</pre>'; die();
+        $elementsService->saveElement($variantConfiguration);
 
         return $this->asJson([
             'result' => 'success',
