@@ -11,6 +11,7 @@
 namespace batchnz\craftcommerceuntitled\services;
 
 use batchnz\craftcommerceuntitled\Plugin;
+use batchnz\craftcommerceuntitled\elements\VariantConfiguration;
 
 use Craft;
 use craft\base\Component;
@@ -32,5 +33,20 @@ class VariantConfigurations extends Component
 {
     // Public Methods
     // =========================================================================
+
+    /**
+     * Get a configuration by ID.
+     *
+     * @param int $id
+     * @param int $siteId
+     * @return VariantConfiguration|null
+     */
+    public function getVariantConfigurationById(int $id, $siteId = null)
+    {
+        /** @var VariantConfiguration $variantConfiguration */
+        $variantConfiguration = Craft::$app->getElements()->getElementById($id, VariantConfiguration::class, $siteId);
+
+        return $variantConfiguration;
+    }
 
 }

@@ -18,6 +18,7 @@ use batchnz\craftcommerceuntitled\helpers\Routes as RoutesHelper;
 use batchnz\craftcommerceuntitled\models\Settings;
 use batchnz\craftcommerceuntitled\services\Products as ProductsService;
 use batchnz\craftcommerceuntitled\services\VariantConfigurations as VariantConfigurationsService;
+use batchnz\craftcommerceuntitled\services\VariantConfigurationTypes as VariantConfigurationTypesService;
 
 use Craft;
 use craft\base\Plugin as CraftPlugin;
@@ -34,7 +35,10 @@ use craft\services\Plugins;
 use craft\web\View;
 use craft\web\UrlManager;
 
+use craft\commerce\models\ProductType;
 use craft\commerce\elements\Product as CommerceProduct;
+use craft\commerce\events\ProductTypeEvent;
+use craft\commerce\services\ProductTypes;
 
 use yii\base\Event;
 
@@ -74,7 +78,6 @@ class Plugin extends CraftPlugin
      * @var CraftCommerceUntitled
      */
     public static $plugin;
-
 
     // Public Properties
     // =========================================================================
@@ -150,6 +153,26 @@ class Plugin extends CraftPlugin
         return $this->get('products');
     }
 
+    /**
+     * Returns the variant configurations service
+     * @author Josh Smith <josh@batch.nz>
+     * @return batchnz\craftcommerceuntitled\services\VariantConfigurations
+     */
+    public function getVariantConfigurations()
+    {
+        return $this->get('variantConfigurations');
+    }
+
+    /**
+     * Returns the variant configuration types service
+     * @author Josh Smith <josh@batch.nz>
+     * @return batchnz\craftcommerceuntitled\services\VariantConfigurationTypes
+     */
+    public function getVariantConfigurationTypes()
+    {
+        return $this->get('variantConfigurationTypes');
+    }
+
     // Protected Methods
     // =========================================================================
 
@@ -188,7 +211,9 @@ class Plugin extends CraftPlugin
     private function _registerComponents()
     {
         Craft::$app->setComponents([
-            'products' => ProductsService::class
+            'products' => ProductsService::class,
+            'variantConfigurations' => VariantConfigurationsService::class,
+            'variantConfigurationTypes' => VariantConfigurationTypesService::class,
         ]);
     }
 
@@ -199,7 +224,7 @@ class Plugin extends CraftPlugin
      */
     private function _registerEvents()
     {
-         // Register our CP routes
+         // Register API routes
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_SITE_URL_RULES,
@@ -212,6 +237,7 @@ class Plugin extends CraftPlugin
                     ],
                     'except' => ['delete', 'create', 'update'],
                     'extraPatterns' => [
+                        'POST' => 'save'
                         // 'GET profile' => 'profile',
                         // 'GET updates' => 'updates',
                         // 'PUT editions' => 'editions',
@@ -247,6 +273,15 @@ class Plugin extends CraftPlugin
         Event::on(CommerceProduct::class, Element::EVENT_AFTER_SAVE, function(ModelEvent $e) {
             $this->getProducts()->handleProductSaveEvent($e);
         });
+
+        // Handle Commerce Product Types After Save Event
+        Event::on(
+            ProductTypes::class,
+            ProductTypes::EVENT_AFTER_SAVE_PRODUCTTYPE,
+            function(ProductTypeEvent $e) {
+                $this->getVariantConfigurationTypes()->handleProductTypeAfterSaveEvent($e);
+            }
+        );
 
         // Handle Craft before page load event
         Event::on(View::class, View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE, function(TemplateEvent $e){

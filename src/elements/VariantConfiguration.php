@@ -11,11 +11,19 @@
 namespace batchnz\craftcommerceuntitled\elements;
 
 use batchnz\craftcommerceuntitled\Plugin;
+use batchnz\craftcommerceuntitled\models\VariantConfigurationType;
+use batchnz\craftcommerceuntitled\records\VariantConfiguration as VariantConfigurationRecord;
+use batchnz\craftcommerceuntitled\elements\db\VariantConfigurationQuery;
 
 use Craft;
 use craft\base\Element;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
+use craft\fields\BaseRelationField;
+use craft\fields\Categories as CategoriesField;
+use craft\base\Field;
+
+use yii\base\InvalidConfigException;
 
 /**
  * VariantConfiguration Element
@@ -67,11 +75,26 @@ class VariantConfiguration extends Element
     // =========================================================================
 
     /**
-     * Some attribute
+     * ID of the associated product
      *
      * @var string
      */
-    public $someAttribute = 'Some Default';
+    public $productId;
+
+    /**
+     * ID of the associated variant configuration type
+     *
+     * @var string
+     */
+    public $typeId;
+
+    // Private Properties
+    // =========================================================================
+
+    /**
+     * @var array|null Record of the fields whose values have already been normalized
+     */
+    private $_normalizedFieldValues;
 
     // Static Methods
     // =========================================================================
@@ -171,7 +194,7 @@ class VariantConfiguration extends Element
      */
     public static function find(): ElementQueryInterface
     {
-        return new ElementQuery(get_called_class());
+        return new VariantConfigurationQuery(static::class);
     }
 
     /**
@@ -187,6 +210,58 @@ class VariantConfiguration extends Element
         $sources = [];
 
         return $sources;
+    }
+
+    /**
+     * inheritdoc
+     * We use this to reset any field level restrictions before the values are normalised
+     * E.g., if a category has a branch limit we'll reset this to store multiple values
+     * @author Josh Smith <josh@batch.nz>
+     * @param  string $fieldHandle string
+     * @return void
+     */
+    protected function normalizeFieldValue(string $fieldHandle)
+    {
+        // Have we already normalized this value?
+        if (isset($this->_normalizedFieldValues[$fieldHandle])) {
+            return;
+        }
+
+        $field = $this->fieldByHandle($fieldHandle);
+
+        if (!$field) {
+            throw new Exception('Invalid field handle: ' . $fieldHandle);
+        }
+
+        // Reset any restrictions or validations on this field
+        // In particular, we need to ensure there's no limits on relation fields.
+        $this->resetField($field);
+
+        $behavior = $this->getBehavior('customFields');
+        $behavior->$fieldHandle = $field->normalizeValue($behavior->$fieldHandle, $this);
+        $this->_normalizedFieldValues[$fieldHandle] = true;
+    }
+
+    /**
+     * Resets field restrictions and settings
+     * We do this so that we can store multiple values against this element
+     * @author Josh Smith <josh@batch.nz>
+     * @param  Field  $field
+     * @return $field
+     */
+    protected function resetField(Field $field): Field
+    {
+        $field->required = false;
+
+        if( $field instanceof BaseRelationField ){
+            $field->limit = null;
+        }
+
+        if( $field instanceof CategoriesField ){
+            $field->branchLimit = null;
+        }
+
+        return $field;
     }
 
     // Public Methods
@@ -205,8 +280,8 @@ class VariantConfiguration extends Element
     public function rules()
     {
         return [
-            ['someAttribute', 'string'],
-            ['someAttribute', 'default', 'value' => 'Some Default'],
+            [['productId', 'typeId'], 'integer'],
+            [['productId','typeId'], 'required'],
         ];
     }
 
@@ -227,26 +302,31 @@ class VariantConfiguration extends Element
      */
     public function getFieldLayout()
     {
-        $tagGroup = $this->getGroup();
+        $variantConfigurationType = $this->getVariantConfigurationType();
 
-        if ($tagGroup) {
-            return $tagGroup->getFieldLayout();
+        if( $variantConfigurationType ){
+            return $variantConfigurationType->getFieldLayout();
         }
 
         return null;
     }
 
-    public function getGroup()
+    /**
+     * Returns the variant configuration type associated with this element
+     * @author Josh Smith <josh@batch.nz>
+     * @return VariantConfigurationType
+     */
+    public function getVariantConfigurationType(): VariantConfigurationType
     {
-        if ($this->groupId === null) {
-            throw new InvalidConfigException('Tag is missing its group ID');
+        if ($this->typeId === null) {
+            throw new InvalidConfigException('Variant Configuration Type is missing its type ID');
         }
 
-        if (($group = Craft::$app->getTags()->getTagGroupById($this->groupId)) === null) {
-            throw new InvalidConfigException('Invalid tag group ID: '.$this->groupId);
+        if (($variantConfigurationType = Plugin::getInstance()->getVariantConfigurationTypes()->getVariantConfigurationTypeById($this->typeId)) === null) {
+            throw new InvalidConfigException('Invalid variant configuration type ID: '.$this->typeId);
         }
 
-        return $group;
+        return $variantConfigurationType;
     }
 
     // Indexes, etc.
@@ -302,6 +382,27 @@ class VariantConfiguration extends Element
      */
     public function afterSave(bool $isNew)
     {
+         if (!$this->propagating) {
+            if (!$isNew) {
+                $record = VariantConfigurationRecord::findOne($this->id);
+
+                if (!$record) {
+                    throw new Exception('Invalid variant configuration ID: ' . $this->id);
+                }
+            } else {
+                $record = new VariantConfigurationRecord();
+                $record->id = $this->id;
+            }
+
+            $record->productId = $this->productId;
+            $record->typeId = $this->typeId;
+
+            $record->save(false);
+
+            $this->id = $record->id;
+        }
+
+        return parent::afterSave($isNew);
     }
 
     /**

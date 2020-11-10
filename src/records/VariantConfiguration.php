@@ -10,46 +10,60 @@
 
 namespace batchnz\craftcommerceuntitled\records;
 
-use batchnz\craftcommerceuntitled\Plugin;
-
-use Craft;
+use craft\base\Element;
 use craft\db\ActiveRecord;
+use yii\db\ActiveQueryInterface;
 
 /**
- * VariantConfiguration Record
+ * Class VariantConfiguration record.
  *
- * ActiveRecord is the base class for classes representing relational data in terms of objects.
- *
- * Active Record implements the [Active Record design pattern](http://en.wikipedia.org/wiki/Active_record).
- * The premise behind Active Record is that an individual [[ActiveRecord]] object is associated with a specific
- * row in a database table. The object's attributes are mapped to the columns of the corresponding table.
- * Referencing an Active Record attribute is equivalent to accessing the corresponding table column for that record.
- *
- * http://www.yiiframework.com/doc-2.0/guide-db-active-record.html
- *
- * @author    Josh Smith
- * @package   CraftCommerceUntitled
- * @since     1.0.0
+ * @property int $id ID
+ * @property int $productId Product ID
+ * @property int $typeId Variant Configuration Type ID
+ * @property Element $element Element
+ * @property Product $product Product
+ * @property VariantConfigurationType $type VariantConfigurationType
+ * @author Josh Smith <josh@batch.nz>
+ * @since 1.0.0
  */
 class VariantConfiguration extends ActiveRecord
 {
-    // Public Static Methods
-    // =========================================================================
-
-     /**
-     * Declares the name of the database table associated with this AR class.
-     * By default this method returns the class name as the table name by calling [[Inflector::camel2id()]]
-     * with prefix [[Connection::tablePrefix]]. For example if [[Connection::tablePrefix]] is `tbl_`,
-     * `Customer` becomes `tbl_customer`, and `OrderItem` becomes `tbl_order_item`. You may override this method
-     * if the table is not named after this convention.
-     *
-     * By convention, tables created by plugins should be prefixed with the plugin
-     * name and an underscore.
-     *
-     * @return string the table name
+    /**
+     * @inheritdoc
+     * @return string
      */
-    public static function tableName()
+    public static function tableName(): string
     {
-        return '{{%commerce_untitled_variantconfiguration}}';
+        return '{{%commerce_untitled_variantconfigurations}}';
+    }
+
+    /**
+     * Returns the entry’s element.
+     *
+     * @return ActiveQueryInterface The relational query object.
+     */
+    public function getElement(): ActiveQueryInterface
+    {
+        return $this->hasOne(Element::class, ['id' => 'id']);
+    }
+
+    /**
+     * Returns the variant configuration's product.
+     *
+     * @return ActiveQueryInterface The relational query object.
+     */
+    public function getProduct(): ActiveQueryInterface
+    {
+        return $this->hasOne(Product::class, ['id' => 'productId']);
+    }
+
+    /**
+     * Returns the variant configuration's type.
+     *
+     * @return ActiveQueryInterface The relational query object.
+     */
+    public function getType(): ActiveQueryInterface
+    {
+        return $this->hasOne(VariantConfigurationType::class, ['id' => 'typeId']);
     }
 }

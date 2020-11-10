@@ -11,9 +11,12 @@
 namespace batchnz\craftcommerceuntitled\controllers\api\v1;
 
 use batchnz\craftcommerceuntitled\Plugin;
+use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationModel;
 
 use Craft;
+
 use yii\rest\Controller;
+use yii\web\BadRequestHttpException;
 
 /**
  * VariantConfigurations Controller
@@ -38,16 +41,6 @@ use yii\rest\Controller;
 class VariantConfigurationsController extends Controller
 {
 
-    // Protected Properties
-    // =========================================================================
-
-    /**
-     * @var    bool|array Allows anonymous access to this controller's actions.
-     *         The actions must be in 'kebab-case'
-     * @access protected
-     */
-    protected $allowAnonymous = ['index', 'do-something'];
-
     // Public Methods
     // =========================================================================
 
@@ -61,5 +54,61 @@ class VariantConfigurationsController extends Controller
     {
         $result = 'Welcome to the VariantConfigurationsController actionIndex() method';
         return $this->asJson($result);
+    }
+
+    /**
+     * Handles the saving of product variant configurations
+     * @author Josh Smith <josh@batch.nz>
+     * @return JSON
+     */
+    public function actionSave()
+    {
+        // Enforce POST
+        if (!$this->request->getIsPost()) {
+            throw new BadRequestHttpException('Post request required');
+        }
+
+        $elementsService = Craft::$app->getElements();
+        $siteId = Craft::$app->getSites()->getCurrentSite()->id;
+
+        // Extract common POST data
+        $id = $this->request->getBodyParam('variantConfigurationId');
+        $typeId = $this->request->getBodyParam('typeId');
+        $productId = $this->request->getBodyParam('productId');
+
+        // Enforce permissions... TODO
+
+        // Fetch an existing record
+        if( !empty($id) ){
+            $variantConfiguration = Plugin::getInstance()
+                ->getVariantConfigurations()
+                ->getVariantConfigurationById($id);
+        } else {
+            $variantConfiguration = new VariantConfigurationModel();
+        }
+
+        // Set the type and site ID's
+        $variantConfiguration->typeId = $typeId;
+        $variantConfiguration->siteId = $siteId ?? $variantConfiguration->siteId;
+
+        // Set the element title
+        if( $title = $this->request->getBodyParam('title') ){
+            $variantConfiguration->title = $title;
+        }
+
+        // Populate safe attributes from POST
+        $variantConfiguration->attributes = $this->request->getBodyParams();
+
+        // Set custom field values from the request
+        $variantConfiguration->setFieldValuesFromRequest('fields');
+
+        // Now save the element
+        $result = $elementsService->saveElement($variantConfiguration);
+        echo '<pre> $result: '; print_r($result); echo '</pre>'; die();
+
+        return $this->asJson([
+            'result' => 'success',
+            'data' => $variantConfiguration
+        ]);
     }
 }

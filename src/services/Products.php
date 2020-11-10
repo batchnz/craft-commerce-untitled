@@ -11,6 +11,8 @@
 namespace batchnz\craftcommerceuntitled\services;
 
 use batchnz\craftcommerceuntitled\Plugin;
+use batchnz\craftcommerceuntitled\enums\ProductVariantType;
+use batchnz\craftcommerceuntitled\models\commerce\ConfigurableProductType;
 use batchnz\craftcommerceuntitled\records\Product;
 
 use Craft;
@@ -34,14 +36,30 @@ class Products extends Component
 
     /**
      * Handles the before render page template event for product CP page templates
-     * We use this event to inject additional variables and alter the view
+     * We use this event to inject additional variables and alter the view to show the configurable variant html
      * @author Josh Smith <josh@batch.nz>
      * @param  TemplateEvent $e
      * @return void
      */
     public function handleProductBeforeRenderPageTemplateEvent(TemplateEvent $e)
     {
+        // Only run this method on the _edit template
+        if( $e->template !== 'commerce/products/_edit' ) return;
 
+        $product = $e->variables['product'];
+        $productType = $e->variables['productType'];
+
+        // Nothing to do for standard product variant types...
+        if( !($product->getVariantType() === ProductVariantType::Configurable) ) return;
+
+        // Create a new instance of the plugin's ConfigurableProductType model
+        $configurableProductType = new ConfigurableProductType($productType);
+
+        // Create the configurable tab menu and fields HTML
+        $form = $configurableProductType->getProductFieldLayout()->createForm($product);
+
+        $e->variables['tabs'] = $form->getTabMenu();
+        $e->variables['fieldsHtml'] = $form->render();
     }
 
     /**
