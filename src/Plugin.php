@@ -11,11 +11,15 @@
 namespace batchnz\craftcommerceuntitled;
 
 use batchnz\craftcommerceuntitled\behaviors\ConfigurableProductBehavior;
+use batchnz\craftcommerceuntitled\behaviors\NormalizeBaseFieldValuesBehavior;
+use batchnz\craftcommerceuntitled\behaviors\NormalizeBaseOptionsFieldValuesBehavior;
+use batchnz\craftcommerceuntitled\behaviors\NormalizeBaseRelationFieldValuesBehavior;
 use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationElement;
 use batchnz\craftcommerceuntitled\enums\ProductVariantType;
 use batchnz\craftcommerceuntitled\fields\VariantsTable as VariantsTableField;
 use batchnz\craftcommerceuntitled\helpers\Routes as RoutesHelper;
 use batchnz\craftcommerceuntitled\models\Settings;
+use batchnz\craftcommerceuntitled\services\Fields as FieldsService;
 use batchnz\craftcommerceuntitled\services\Products as ProductsService;
 use batchnz\craftcommerceuntitled\services\VariantConfigurations as VariantConfigurationsService;
 use batchnz\craftcommerceuntitled\services\VariantConfigurationTypes as VariantConfigurationTypesService;
@@ -23,12 +27,15 @@ use batchnz\craftcommerceuntitled\services\VariantConfigurationTypes as VariantC
 use Craft;
 use craft\base\Plugin as CraftPlugin;
 use craft\base\Element;
+use craft\base\Field;
 use craft\events\DefineBehaviorsEvent;
 use craft\events\ModelEvent;
 use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\TemplateEvent;
+use craft\fields\BaseOptionsField;
+use craft\fields\BaseRelationField;
 use craft\services\Elements;
 use craft\services\Fields;
 use craft\services\Plugins;
@@ -130,6 +137,7 @@ class Plugin extends CraftPlugin
 
         // Bootstrap plugin
         $this->_registerComponents();
+        $this->_registerBehaviors();
         $this->_registerEvents();
         $this->_registerHooks();
 
@@ -141,6 +149,16 @@ class Plugin extends CraftPlugin
             ),
             __METHOD__
         );
+    }
+
+    /**
+     * Returns the fields service
+     * @author Josh Smith <josh@batch.nz>
+     * @return batchnz\craftcommerceuntitled\services\Fields
+     */
+    public function getFields()
+    {
+        return $this->get('fields');
     }
 
     /**
@@ -210,11 +228,60 @@ class Plugin extends CraftPlugin
      */
     private function _registerComponents()
     {
-        Craft::$app->setComponents([
+        $this->setComponents([
+            'fields' => FieldsService::class,
             'products' => ProductsService::class,
             'variantConfigurations' => VariantConfigurationsService::class,
             'variantConfigurationTypes' => VariantConfigurationTypesService::class,
         ]);
+    }
+
+    /**
+     * Registers behaviors used by the plugin
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
+    private function _registerBehaviors()
+    {
+        // Craft Field Behaviors
+        Event::on(
+            Field::class, Field::EVENT_DEFINE_BEHAVIORS,
+            function(DefineBehaviorsEvent $event) {
+                $event->sender->attachBehaviors([
+                    NormalizeBaseFieldValuesBehavior::class
+                ]);
+            }
+        );
+
+        // Craft Base Relation Field Behaviors
+        Event::on(
+            BaseRelationField::class, BaseRelationField::EVENT_DEFINE_BEHAVIORS,
+            function(DefineBehaviorsEvent $event) {
+                $event->sender->attachBehaviors([
+                    NormalizeBaseRelationFieldValuesBehavior::class
+                ]);
+            }
+        );
+
+        // Craft Base Options Field Behaviors
+        Event::on(
+            BaseOptionsField::class, BaseOptionsField::EVENT_DEFINE_BEHAVIORS,
+            function(DefineBehaviorsEvent $event) {
+                $event->sender->attachBehaviors([
+                    NormalizeBaseOptionsFieldValuesBehavior::class
+                ]);
+            }
+        );
+
+        // Craft Commerce Product Behaviors
+        Event::on(
+            CommerceProduct::class, CommerceProduct::EVENT_DEFINE_BEHAVIORS,
+            function(DefineBehaviorsEvent $event) {
+                $event->sender->attachBehaviors([
+                    ConfigurableProductBehavior::class
+                ]);
+            }
+        );
     }
 
     /**
@@ -229,7 +296,7 @@ class Plugin extends CraftPlugin
             UrlManager::class,
             UrlManager::EVENT_REGISTER_SITE_URL_RULES,
             function (RegisterUrlRulesEvent $event) {
-                // Craft API Routes
+                // Variant Configurations Controller
                 $event->rules[] = [
                     'class' => 'yii\rest\UrlRule',
                     'controller' => [
@@ -241,6 +308,18 @@ class Plugin extends CraftPlugin
                         // 'GET profile' => 'profile',
                         // 'GET updates' => 'updates',
                         // 'PUT editions' => 'editions',
+                    ],
+                ];
+
+                // Variant Configuration Types Controller
+                $event->rules[] = [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => [
+                        RoutesHelper::getApiRoute('variant-configuration-types') => RoutesHelper::getApiController('variant-configuration-types')
+                    ],
+                    'except' => ['delete', 'create', 'update'],
+                    'extraPatterns' => [
+                        'GET fields' => 'fields'
                     ],
                 ];
             }
@@ -257,15 +336,6 @@ class Plugin extends CraftPlugin
         Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES,
             function (RegisterComponentTypesEvent $event) {
                 $event->types[] = VariantsTableField::class;
-            }
-        );
-
-        // Register plugin behaviors
-        Event::on(
-            CommerceProduct::class, CommerceProduct::EVENT_DEFINE_BEHAVIORS, function(DefineBehaviorsEvent $event) {
-                $event->sender->attachBehaviors([
-                    ConfigurableProductBehavior::class
-                ]);
             }
         );
 

@@ -14,6 +14,7 @@ use batchnz\craftcommerceuntitled\records\VariantConfiguration as VariantConfigu
 
 use Craft;
 use craft\elements\db\ElementQuery;
+use craft\helpers\Db;
 
 /**
  * Query class for the variant configuration query element

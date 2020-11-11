@@ -286,6 +286,36 @@ class VariantConfiguration extends Element
     }
 
     /**
+     * Sets the fields that will be outputted when the element is serialized
+     * @author Josh Smith <josh@batch.nz>
+     * @return array
+     */
+    public function fields()
+    {
+        $baseElementFields = [
+            'id',
+            'productId',
+            'typeId',
+            'siteId',
+            'title',
+            'dateCreated',
+            'dateUpdated',
+            'dateDeleted',
+            'status',
+        ];
+
+        $customElementFields = [];
+        foreach ($this->fieldLayoutFields() as $field) {
+            $customElementFields[$field->handle] = function() use($field){
+                $value = $this->getFieldValue($field->handle);
+                return $field->serializeValue($value, $this);
+            };
+        }
+
+        return array_merge($baseElementFields, $customElementFields);
+    }
+
+    /**
      * Returns whether the current user can edit the element.
      *
      * @return bool

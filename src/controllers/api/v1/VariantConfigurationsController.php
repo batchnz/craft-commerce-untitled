@@ -19,19 +19,7 @@ use yii\rest\Controller;
 use yii\web\BadRequestHttpException;
 
 /**
- * VariantConfigurations Controller
- *
- * Generally speaking, controllers are the middlemen between the front end of
- * the CP/website and your plugin’s services. They contain action methods which
- * handle individual tasks.
- *
- * A common pattern used throughout Craft involves a controller action gathering
- * post data, saving it on a model, passing the model off to a service, and then
- * responding to the request appropriately depending on the service method’s response.
- *
- * Action methods begin with the prefix “action”, followed by a description of what
- * the method does (for example, actionSaveIngredient()).
- *
+ * Variant Configurations Controller
  * https://craftcms.com/docs/plugins/controllers
  *
  * @author    Josh Smith
@@ -52,8 +40,21 @@ class VariantConfigurationsController extends Controller
      */
     public function actionIndex()
     {
-        $result = 'Welcome to the VariantConfigurationsController actionIndex() method';
-        return $this->asJson($result);
+        // Initialise a blank variant configuration query
+        $variantConfigurationsQuery = VariantConfigurationModel::find();
+
+        // Filter on product Ids
+        if( $productId = $this->request->getQueryParam('productId') ){
+            $variantConfigurationsQuery->productId($productId);
+        }
+
+        // Fetch all matching variant configurations
+        $variantConfigurations = $variantConfigurationsQuery->all();
+
+        return $this->asJson([
+            'result' => 'success',
+            'data' => $variantConfigurations
+        ]);
     }
 
     /**
