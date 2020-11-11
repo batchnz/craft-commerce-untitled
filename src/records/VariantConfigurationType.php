@@ -65,8 +65,19 @@ class VariantConfigurationType extends ActiveRecord
             ->getProductTypeById($this->productTypeId);
     }
 
+    /**
+     * Define validation rules for this model
+     * @author Josh Smith <josh@batch.nz>
+     * @return array
+     */
     public function rules()
     {
+        if( $this->getIsNewRecord() ){
+            return [
+                [['productTypeId', 'fieldLayoutId'], 'required']
+            ];
+        }
+
         return [
             [['id', 'productTypeId', 'fieldLayoutId', 'uid'], 'required']
         ];

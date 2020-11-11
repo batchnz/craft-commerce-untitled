@@ -82,7 +82,6 @@ class VariantConfigurationTypes extends Component
 
     /**
      * Saves the variant configuration type
-     * TODO: add validation
      * @author Josh Smith <josh@batch.nz>
      * @param  VariantConfigurationType $variantConfigurationType
      * @return bool
@@ -94,28 +93,15 @@ class VariantConfigurationTypes extends Component
 
         try {
             // Fetch the variant field layout
-            $variantFieldLayout = $variantConfigurationType->getProductType()->getVariantFieldLayout();
+            $variantFieldLayout = $variantConfigurationType
+                ->getProductType()
+                ->getVariantFieldLayout();
 
-            // Create a new field layout from the variant layout config
-            $fieldLayout = FieldLayout::createFromConfig($variantFieldLayout->getConfig());
-            $fieldLayout->type = VariantConfiguration::class;
-
-            // Assign a UID to the field layout if we're creating a new one
-            if( empty($variantConfigurationType->fieldLayoutId) ){
-                $fieldLayout->uid = StringHelper::UUID();
-            // Otherwise, simply replace the ID attribute to update an existing record
-            } else {
-                $fieldLayout->id = $variantConfigurationType->fieldLayoutId;
-            }
-
-            // Save the layout
-            Craft::$app->getFields()->saveLayout($fieldLayout);
-
-            // Assign properties to the record for saving
-            $variantConfigurationType->fieldLayoutId = $fieldLayout->id;
+            // Set the field layout to the variant layout
+            $variantConfigurationType->fieldLayoutId = $variantFieldLayout->id;
 
             // Save the record
-            $variantConfigurationType->save();
+            $result = $variantConfigurationType->save();
 
             $transaction->commit();
         } catch (Throwable $e) {
@@ -123,7 +109,7 @@ class VariantConfigurationTypes extends Component
             throw $e;
         }
 
-        return true;
+        return !$result->hasErrors();
     }
 
     /**

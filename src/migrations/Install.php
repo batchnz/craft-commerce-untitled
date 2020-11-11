@@ -12,7 +12,6 @@ namespace batchnz\craftcommerceuntitled\migrations;
 
 use batchnz\craftcommerceuntitled\Plugin;
 use batchnz\craftcommerceuntitled\enums\ProductVariantType;
-use batchnz\craftcommerceuntitled\models\VariantConfigurationType as VariantConfigurationTypeModel;
 use batchnz\craftcommerceuntitled\records\Product;
 use batchnz\craftcommerceuntitled\records\VariantConfiguration;
 use batchnz\craftcommerceuntitled\records\VariantConfigurationType;
@@ -254,7 +253,7 @@ class Install extends Migration
 
         foreach ($productTypes as $productType) {
             // Create a new variant configuration type
-            $variantConfigurationType = new VariantConfigurationTypeModel([
+            $variantConfigurationType = new VariantConfigurationType([
                 'productTypeId' => $productType->id
             ]);
 
