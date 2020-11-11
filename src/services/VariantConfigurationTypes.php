@@ -101,7 +101,7 @@ class VariantConfigurationTypes extends Component
             $variantConfigurationType->fieldLayoutId = $variantFieldLayout->id;
 
             // Save the record
-            $result = $variantConfigurationType->save();
+            $variantConfigurationType->save();
 
             $transaction->commit();
         } catch (Throwable $e) {
@@ -109,7 +109,7 @@ class VariantConfigurationTypes extends Component
             throw $e;
         }
 
-        return !$result->hasErrors();
+        return !$variantConfigurationType->hasErrors();
     }
 
     /**
