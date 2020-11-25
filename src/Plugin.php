@@ -354,10 +354,23 @@ class Plugin extends CraftPlugin
         );
 
         // Handle Craft before page load event
+        // We use this event to overwrite the variant tabs with our own custom HTML
         Event::on(View::class, View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE, function(TemplateEvent $e){
             if( strpos($e->template, 'commerce/products/') !== false ){
                 $this->getProducts()->handleProductBeforeRenderPageTemplateEvent($e);
             }
+        });
+
+        // Handle after plugins loaded event
+        // We use this event to re-route product edit routes to our custom controller
+        // This allows us to limit the number of variants loaded against a product
+        Event::on(Plugins::class, Plugins::EVENT_AFTER_LOAD_PLUGINS, function(Event $event){
+            $urlManager = Craft::$app->getUrlManager();
+            $urlManager->addRules([
+                'commerce/products/<productTypeHandle:{handle}>/new/<siteHandle:{handle}>' => $this->id . '/products/edit-product',
+                'commerce/products/<productTypeHandle:{handle}>/<productId:\d+><slug:(?:-[^\/]*)?>' => $this->id . '/products/edit-product',
+                'commerce/products/<productTypeHandle:{handle}>/<productId:\d+><slug:(?:-[^\/]*)?>/<siteHandle:{handle}>' => $this->id . '/products/edit-product'
+            ], false);
         });
     }
 

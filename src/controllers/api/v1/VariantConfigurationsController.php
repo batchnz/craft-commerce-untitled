@@ -17,6 +17,7 @@ use Craft;
 
 use yii\rest\Controller;
 use yii\web\BadRequestHttpException;
+use yii\web\NotFoundHttpException;
 
 /**
  * Variant Configurations Controller
@@ -33,10 +34,9 @@ class VariantConfigurationsController extends Controller
     // =========================================================================
 
     /**
-     * Handle a request going to our plugin's index action URL,
-     * e.g.: actions/craft-commerce-untitled/variant-configuration
-     *
-     * @return mixed
+     * Handle a request going to our plugin's index action URL
+     * @author Josh Smith <josh@batch.nz>
+     * @return JSON
      */
     public function actionIndex()
     {
@@ -54,6 +54,31 @@ class VariantConfigurationsController extends Controller
         return $this->asJson([
             'result' => 'success',
             'data' => $variantConfigurations
+        ]);
+    }
+
+    /**
+     * Endpoint to generate variants for the configuration
+     * @author Josh Smith <josh@batch.nz>
+     * @param  int    $configurationId ID of the configuration to generate variants for
+     * @return JSON
+     */
+    public function actionGenerateVariants(int $id)
+    {
+        $configuration = VariantConfigurationModel::find()
+            ->id($id)
+            ->one();
+
+        if( empty($configuration) )
+            throw new NotFoundHttpException('Variant Configuration not found.');
+
+        // Create variants from the configuration selections
+        Plugin::getInstance()
+            ->getVariantConfigurations()
+            ->generateVariantsByConfiguration($configuration);
+
+        return $this->asJson([
+            'result' => 'success',
         ]);
     }
 

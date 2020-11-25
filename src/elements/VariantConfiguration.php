@@ -359,6 +359,51 @@ class VariantConfiguration extends Element
         return $variantConfigurationType;
     }
 
+    /**
+     * Returns the variant permutations from the selected field values
+     * @author Josh Smith <josh@batch.nz>
+     * @return array
+     */
+    public function getVariantPermutations(): array
+    {
+        // Get the transformed configuration data
+        $configurationData = $this->toArray();
+
+        // Load the custom fields
+        $fields = $this
+            ->getFieldLayout()
+            ->getFields();
+
+        // Create a mapping of custom field values
+        $fieldHandles = array_column($fields, 'handle');
+        $fieldMap = array_intersect_key($configurationData, array_flip($fieldHandles));
+
+        return ArrayHelper::cartesian($fieldMap);
+    }
+
+    /**
+     * Exposes the fieldByHandle method
+     * @author Josh Smith <josh@batch.nz>
+     * @param  string $handle
+     * @return Field|null
+     */
+    public function getFieldByHandle(string $handle): ?Field
+    {
+        return $this->fieldByHandle($handle);
+    }
+
+    /**
+     * Returns the associated product
+     * @author Josh Smith <josh@batch.nz>
+     * @return Product|null
+     */
+    public function getProduct(): ?Product
+    {
+        return Commerce::getInstance()
+            ->getProducts()
+            ->getProductById($this->productId);
+    }
+
     // Indexes, etc.
     // -------------------------------------------------------------------------
 
