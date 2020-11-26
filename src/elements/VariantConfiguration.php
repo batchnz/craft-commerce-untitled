@@ -509,31 +509,22 @@ class VariantConfiguration extends Element
      */
     public function normalizeSettingsValue($type, $fieldValues = [])
     {
-        $value = null;
         $settings = $this->settings[$type] ?? null;
+        if( empty($settings) ) return null;
 
-        // Determine pricing based on field
-        if( !empty($settings) && $settings->method === 'field' ){
-            $elementId = $fieldValues[$settings->field] ?? null;
-            $value = $settings->values[$elementId] ?? null;
+        switch ($settings->method) {
+            case 'field':
+                $elementId = $fieldValues[$settings->field] ?? null;
+                $value = $settings->values[$elementId] ?? null;
+                break;
+
+            default:
+                $value = null;
+                break;
         }
 
         return $value;
     }
-
-    // /**
-    //  * Returns the element's settings
-    //  * @author Josh Smith <josh@batch.nz>
-    //  * @return array
-    //  */
-    // public function getSettings(): array
-    // {
-    //     if( empty($this->_settings) ){
-    //         $this->_settings = json_decode($this->settings, true);
-    //     }
-
-    //     return $this->_settings;
-    // }
 
     /**
      * Sets settings from the request
