@@ -500,6 +500,27 @@ class VariantConfiguration extends Element
             ->getProductById($this->productId);
     }
 
+    /**
+     * Normalizes field values for the settings type
+     * @author Josh Smith <josh@batch.nz>
+     * @param  string $type        Type of settings
+     * @param  array  $fieldValues An array of values keyed by field handles
+     * @return mixed
+     */
+    public function normalizeSettingsValue($type, $fieldValues = [])
+    {
+        $value = null;
+        $settings = $this->settings[$type] ?? null;
+
+        // Determine pricing based on field
+        if( !empty($settings) && $settings->method === 'field' ){
+            $elementId = $fieldValues[$settings->field] ?? null;
+            $value = $settings->values[$elementId] ?? null;
+        }
+
+        return $value;
+    }
+
     // /**
     //  * Returns the element's settings
     //  * @author Josh Smith <josh@batch.nz>
