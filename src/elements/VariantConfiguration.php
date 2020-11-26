@@ -328,11 +328,11 @@ class VariantConfiguration extends Element
 
         // Ensure valid settings
         $rules[] = [['settings'], function($attr, $params){
-            foreach ($this->$attr as $key => $setting) {
+            foreach ($this->$attr as $type => $setting) {
 
                 // Enforce model constraint
                 if( !$setting instanceof VariantConfigurationSetting ){
-                    return $this->addError($attr."[$key]", 'Setting must be of type ' . VariantConfigurationSetting::class . '.');
+                    return $this->addError($attr."[$type]", 'Setting must be of type ' . VariantConfigurationSetting::class . '.');
                 }
 
                 // Validate the model
@@ -341,7 +341,7 @@ class VariantConfiguration extends Element
 
                     // Nest settings errors within the "settings" key
                     foreach ($setting->getErrors() as $key => $error) {
-                        $errors[$attr."[$key]"] = $error;
+                        $errors[$attr."[$type][$key]"] = $error;
                     }
 
                     $this->addErrors($errors);
@@ -530,7 +530,8 @@ class VariantConfiguration extends Element
 
         $settings = [];
         foreach ($bodyParams as $key => $value) {
-            $settings[$key] = new VariantConfigurationSetting($value);
+            $settings[$key] = new VariantConfigurationSetting;
+            $settings[$key]->setAttributes($value);
         }
         $this->settings = $settings;
 
