@@ -15,6 +15,10 @@ use batchnz\craftcommerceuntitled\elements\VariantConfiguration;
 
 use Craft;
 use craft\base\Component;
+use craft\fields\BaseRelationField;
+
+use craft\commerce\elements\Variant;
+use craft\commerce\helpers\Product as ProductHelper;
 
 /**
  * VariantConfigurations Service
@@ -41,12 +45,49 @@ class VariantConfigurations extends Component
      * @param int $siteId
      * @return VariantConfiguration|null
      */
-    public function getVariantConfigurationById(int $id, $siteId = null)
+    public function getVariantConfigurationById(int $id, $siteId = null): ?VariantConfiguration
     {
         /** @var VariantConfiguration $variantConfiguration */
-        $variantConfiguration = Craft::$app->getElements()->getElementById($id, VariantConfiguration::class, $siteId);
-
-        return $variantConfiguration;
+        return Craft::$app
+            ->getElements()
+            ->getElementById($id, VariantConfiguration::class, $siteId);
     }
 
+    /**
+     * Generates variants by the configuration
+     * @author Josh Smith <josh@batch.nz>
+     * @param  VariantConfiguration $configuration
+     * @return void
+     */
+    public function generateVariantsByConfiguration(VariantConfiguration $configuration)
+    {
+        $product = $configuration->getProduct();
+        $permutation = $configuration->getVariantPermutations();
+
+        foreach ($permutation as &$fieldValues) {
+            // Transform values in the permutation
+            foreach ($fieldValues as $handle => $value) {
+                $field = $configuration->getFieldByHandle($handle);
+
+                // Relation fields require the value to be an array
+                if( $field instanceof BaseRelationField ){
+                    $fieldValues[$handle] = [$value];
+                }
+            }
+
+            // Todo, work out SKU, price, stock etc.
+            $variantData = [
+                'price' => '0.00',
+                'minQty' => null,
+                'maxQty' => null,
+                'fields' => $fieldValues
+            ];
+
+            // Populate the variant element
+            $variant = ProductHelper::populateProductVariantModel($product, $variantData, 'new');
+
+            // Save the variant
+            Craft::$app->getElements()->saveElement($variant);
+        }
+    }
 }

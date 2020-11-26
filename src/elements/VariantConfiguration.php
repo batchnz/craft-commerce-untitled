@@ -11,17 +11,24 @@
 namespace batchnz\craftcommerceuntitled\elements;
 
 use batchnz\craftcommerceuntitled\Plugin;
+use batchnz\craftcommerceuntitled\elements\db\VariantConfigurationQuery;
+use batchnz\craftcommerceuntitled\helpers\ArrayHelper;
+use batchnz\craftcommerceuntitled\models\VariantConfigurationSetting;
 use batchnz\craftcommerceuntitled\records\VariantConfigurationType;
 use batchnz\craftcommerceuntitled\records\VariantConfiguration as VariantConfigurationRecord;
-use batchnz\craftcommerceuntitled\elements\db\VariantConfigurationQuery;
 
 use Craft;
 use craft\base\Element;
+use craft\base\Field;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
 use craft\fields\BaseRelationField;
 use craft\fields\Categories as CategoriesField;
-use craft\base\Field;
+use craft\helpers\Json;
+use craft\validators\ArrayValidator;
+
+use craft\commerce\Plugin as Commerce;
+use craft\commerce\elements\Product;
 
 use yii\base\InvalidConfigException;
 
@@ -71,6 +78,11 @@ use yii\base\InvalidConfigException;
  */
 class VariantConfiguration extends Element
 {
+    // Scenarios
+    public const SCENARIO_SET_FIELDS = 'setFields';
+    public const SCENARIO_SET_SETTINGS = 'setSettings';
+    public const SCENARIO_SET_VALUES = 'setValues';
+
     // Public Properties
     // =========================================================================
 
@@ -88,6 +100,20 @@ class VariantConfiguration extends Element
      */
     public $typeId;
 
+    /**
+     * Variant configuration fields
+     *
+     * @var string
+     */
+    public $fields;
+
+    /**
+     * Variant configuration settings
+     *
+     * @var array
+     */
+    public $settings;
+
     // Private Properties
     // =========================================================================
 
@@ -95,6 +121,12 @@ class VariantConfiguration extends Element
      * @var array|null Record of the fields whose values have already been normalized
      */
     private $_normalizedFieldValues;
+
+    /**
+     * Cache for the element settings
+     * @var array
+     */
+    private $_settings;
 
     // Static Methods
     // =========================================================================
@@ -264,9 +296,6 @@ class VariantConfiguration extends Element
         return $field;
     }
 
-    // Public Methods
-    // =========================================================================
-
     /**
      * Returns the validation rules for attributes.
      *
@@ -277,12 +306,77 @@ class VariantConfiguration extends Element
      *
      * @return array
      */
-    public function rules()
+    protected function defineRules(): array
     {
-        return [
-            [['productId', 'typeId'], 'integer'],
-            [['productId','typeId'], 'required'],
-        ];
+        $rules = parent::defineRules();
+
+        // General Rules
+        $rules[] = [['id', 'productId', 'typeId'], 'integer'];
+        $rules[] = [['fields'], ArrayValidator::class];
+        $rules[] = [['settings'], ArrayValidator::class];
+
+        // Ensure valid settings types are set
+        $rules[] = [['settings'], function($attr, $params){
+            $settingsTypes = VariantConfigurationSetting::VALID_SETTINGS_TYPES;
+
+            foreach ($this->$attr as $key => $value) {
+                if( !in_array($key, $settingsTypes) ){
+                    $this->addError('settings', 'Invalid setting "'.$key.'". Expected one of ' . implode(', ', $settingsTypes) . '.');
+                }
+            }
+        }];
+
+        // Ensure valid settings
+        $rules[] = [['settings'], function($attr, $params){
+            foreach ($this->$attr as $key => $setting) {
+
+                // Enforce model constraint
+                if( !$setting instanceof VariantConfigurationSetting ){
+                    return $this->addError($attr."[$key]", 'Setting must be of type ' . VariantConfigurationSetting::class . '.');
+                }
+
+                // Validate the model
+                if( !$setting->validate() ){
+                    $errors = [];
+
+                    // Nest settings errors within the "settings" key
+                    foreach ($setting->getErrors() as $key => $error) {
+                        $errors[$attr."[$key]"] = $error;
+                    }
+
+                    $this->addErrors($errors);
+                }
+            }
+        }];
+
+        // Default Scenario
+        $rules[] = [['productId','typeId'], 'required', 'on' => self::SCENARIO_DEFAULT];
+
+        // Field Selection & Values Scenario
+        $rules[] = ['id', 'required', 'on' => [
+            self::SCENARIO_SET_FIELDS,
+            self::SCENARIO_SET_SETTINGS,
+            self::SCENARIO_SET_VALUES
+        ]];
+
+        return $rules;
+    }
+
+    // Public Methods
+    // =========================================================================
+
+    /**
+     * Defines the scenriors on this element
+     * @author Josh Smith <josh@batch.nz>
+     * @return array
+     */
+    public function scenarios()
+    {
+        $scenarios = parent::scenarios();
+        $scenarios[self::SCENARIO_SET_FIELDS] = ['id', 'fields'];
+        $scenarios[self::SCENARIO_SET_SETTINGS] = ['id', 'settings'];
+        $scenarios[self::SCENARIO_SET_VALUES] = ['id'];
+        return $scenarios;
     }
 
     /**
@@ -296,6 +390,8 @@ class VariantConfiguration extends Element
             'id',
             'productId',
             'typeId',
+            'fields',
+            'settings',
             'siteId',
             'title',
             'dateCreated',
@@ -404,6 +500,43 @@ class VariantConfiguration extends Element
             ->getProductById($this->productId);
     }
 
+    // /**
+    //  * Returns the element's settings
+    //  * @author Josh Smith <josh@batch.nz>
+    //  * @return array
+    //  */
+    // public function getSettings(): array
+    // {
+    //     if( empty($this->_settings) ){
+    //         $this->_settings = json_decode($this->settings, true);
+    //     }
+
+    //     return $this->_settings;
+    // }
+
+    /**
+     * Sets settings from the request
+     * @author Josh Smith <josh@batch.nz>
+     * @param  string $key
+     */
+    public function setSettingsFromRequest($key)
+    {
+        $request = Craft::$app->getRequest();
+        $bodyParams = $request->getBodyParam($key);
+
+        if( empty($bodyParams) ){
+            return $this;
+        }
+
+        $settings = [];
+        foreach ($bodyParams as $key => $value) {
+            $settings[$key] = new VariantConfigurationSetting($value);
+        }
+        $this->settings = $settings;
+
+        return $this;
+    }
+
     // Indexes, etc.
     // -------------------------------------------------------------------------
 
@@ -471,6 +604,8 @@ class VariantConfiguration extends Element
 
             $record->productId = $this->productId;
             $record->typeId = $this->typeId;
+            $record->fields = (empty($this->fields) ? NULL : Json::encode($this->fields));
+            $record->settings = (empty($this->settings) ? NULL : Json::encode($this->settings));
 
             $record->save(false);
 
@@ -496,29 +631,6 @@ class VariantConfiguration extends Element
      * @return void
      */
     public function afterDelete()
-    {
-    }
-
-    /**
-     * Performs actions before an element is moved within a structure.
-     *
-     * @param int $structureId The structure ID
-     *
-     * @return bool Whether the element should be moved within the structure
-     */
-    public function beforeMoveInStructure(int $structureId): bool
-    {
-        return true;
-    }
-
-    /**
-     * Performs actions after an element is moved within a structure.
-     *
-     * @param int $structureId The structure ID
-     *
-     * @return void
-     */
-    public function afterMoveInStructure(int $structureId)
     {
     }
 }

@@ -113,6 +113,8 @@ class Install extends Migration
                     'id' => $this->primaryKey(),
                     'productId' => $this->integer()->notNull(),
                     'typeId' => $this->integer()->notNull(),
+                    'fields' => $this->text(),
+                    'settings' => $this->text(),
                     'dateCreated' => $this->dateTime()->notNull(),
                     'dateUpdated' => $this->dateTime()->notNull(),
                     'uid' => $this->uid(),

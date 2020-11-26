@@ -243,7 +243,7 @@ class Plugin extends CraftPlugin
      */
     private function _registerBehaviors()
     {
-        // Craft Field Behaviors
+        // Craft Base Field Behaviors
         Event::on(
             Field::class, Field::EVENT_DEFINE_BEHAVIORS,
             function(DefineBehaviorsEvent $event) {
@@ -302,12 +302,12 @@ class Plugin extends CraftPlugin
                     'controller' => [
                         RoutesHelper::getApiRoute('variant-configurations') => RoutesHelper::getApiController('variant-configurations')
                     ],
-                    'except' => ['delete', 'create', 'update'],
                     'extraPatterns' => [
-                        'POST' => 'save'
-                        // 'GET profile' => 'profile',
-                        // 'GET updates' => 'updates',
-                        // 'PUT editions' => 'editions',
+                        'POST' => 'save',
+                        'PATCH <id:\d+>/fields' => 'save-fields',
+                        'PATCH <id:\d+>/values' => 'save-values',
+                        'PATCH <id:\d+>/settings' => 'save-settings',
+                        'POST <id:\d+>/variants/generate' => 'generate-variants'
                     ],
                 ];
 

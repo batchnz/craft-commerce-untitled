@@ -12,12 +12,14 @@ namespace batchnz\craftcommerceuntitled\controllers\api\v1;
 
 use batchnz\craftcommerceuntitled\Plugin;
 use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationModel;
+use batchnz\craftcommerceuntitled\helpers\VariantConfiguration as VariantConfigurationHelper;
 
 use Craft;
 
 use yii\rest\Controller;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
+use yii\web\UnprocessableEntityHttpException;
 
 /**
  * Variant Configurations Controller
@@ -94,42 +96,125 @@ class VariantConfigurationsController extends Controller
             throw new BadRequestHttpException('Post request required');
         }
 
-        $elementsService = Craft::$app->getElements();
-        $siteId = Craft::$app->getSites()->getCurrentSite()->id;
+        $variantConfiguration = VariantConfigurationHelper::populateVariantConfigurationFromPost();
 
-        // Extract common POST data
-        $id = $this->request->getBodyParam('variantConfigurationId');
-        $typeId = $this->request->getBodyParam('typeId');
-        $productId = $this->request->getBodyParam('productId');
+        return $this->save($variantConfiguration);
+    }
 
-        // Enforce permissions... TODO
-
-        // Fetch an existing record
-        if( !empty($id) ){
-            $variantConfiguration = Plugin::getInstance()
-                ->getVariantConfigurations()
-                ->getVariantConfigurationById($id);
-        } else {
-            $variantConfiguration = new VariantConfigurationModel();
+     /**
+     * PATCH endpoint to save variant configuration fields
+     * @author Josh Smith <josh@batch.nz>
+     * @return JSON
+     */
+    public function actionSaveFields($id = null)
+    {
+        // Enforce PATCH
+        if (!$this->request->getIsPatch()) {
+            throw new BadRequestHttpException('Patch request required');
         }
 
-        // Set the type and site ID's
-        $variantConfiguration->typeId = $typeId;
-        $variantConfiguration->siteId = $siteId ?? $variantConfiguration->siteId;
-
-        // Set the element title
-        if( $title = $this->request->getBodyParam('title') ){
-            $variantConfiguration->title = $title;
+        // Enforce that fields have been passed
+        $fields = $this->request->getBodyParam('fields');
+        if( empty($fields) ){
+            throw new BadRequestHttpException('No fields received.');
         }
 
-        // Populate safe attributes from POST
-        $variantConfiguration->attributes = $this->request->getBodyParams();
+        // Remove superfluous data
+        $this->request->setBodyParams([
+            'variantConfigurationId' => $id,
+            'fields' => $fields
+        ]);
 
-        // Set custom field values from the request
-        $variantConfiguration->setFieldValuesFromRequest('fields');
+        // Save the field selection scenario
+        $variantConfiguration = VariantConfigurationHelper::populateVariantConfigurationFromPost();
+        $variantConfiguration->setScenario(VariantConfigurationModel::SCENARIO_SET_FIELDS);
 
-        // Now save the element
-        $elementsService->saveElement($variantConfiguration);
+        return $this->save($variantConfiguration);
+    }
+
+    /**
+     * Saves variant field values
+     * @author Josh Smith <josh@batch.nz>
+     * @param  int $id
+     * @return JSON
+     */
+    public function actionSaveValues($id = null)
+    {
+        // Enforce PATCH
+        if (!$this->request->getIsPatch()) {
+            throw new BadRequestHttpException('Patch request required');
+        }
+
+        // Enforce that values have been passed
+        $values = $this->request->getBodyParam('values');
+        if( empty($values) ){
+            throw new BadRequestHttpException('No values received.');
+        }
+
+        // Remove superfluous data
+        $this->request->setBodyParams([
+            'variantConfigurationId' => $id,
+            'values' => $values
+        ]);
+
+        // Save the field selection scenario
+        $variantConfiguration = VariantConfigurationHelper::populateVariantConfigurationFromPost();
+        $variantConfiguration->setScenario(VariantConfigurationModel::SCENARIO_SET_VALUES);
+
+        return $this->save($variantConfiguration);
+    }
+
+    /**
+     * PATCH endpoint to save variant configuration settings
+     * @author Josh Smith <josh@batch.nz>
+     * @return JSON
+     */
+    public function actionSaveSettings($id = null)
+    {
+        // Enforce PATCH
+        if (!$this->request->getIsPatch()) {
+            throw new BadRequestHttpException('Patch request required');
+        }
+
+        // Enforce that settings have been passed
+        $settings = $this->request->getBodyParam('settings');
+        if( empty($settings) ){
+            throw new BadRequestHttpException('No settings received.');
+        }
+
+        // Remove superfluous data
+        $this->request->setBodyParams([
+            'variantConfigurationId' => $id,
+            'settings' => $settings
+        ]);
+
+        // Save the field selection scenario
+        $variantConfiguration = VariantConfigurationHelper::populateVariantConfigurationFromPost();
+        $variantConfiguration->setScenario(VariantConfigurationModel::SCENARIO_SET_SETTINGS);
+
+        return $this->save($variantConfiguration);
+    }
+
+    // Protected Methods
+    // =========================================================================
+
+    /**
+     * Internal method to save the element whilst handling validatione errors etc.
+     * @author Josh Smith <josh@batch.nz>
+     * @param  VariantConfigurationModel $variantConfiguration
+     * @return JSON
+     */
+    protected function save(VariantConfigurationModel $variantConfiguration)
+    {
+        // Save it.
+        $result = Craft::$app->getElements()->saveElement($variantConfiguration);
+
+        if( $result === false ){
+            return $this->asJson([
+                'result' => 'validation_error',
+                'errors' => $variantConfiguration->getErrors()
+            ])->setStatusCode(422);
+        }
 
         return $this->asJson([
             'result' => 'success',

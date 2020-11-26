@@ -10,11 +10,14 @@
 
 namespace batchnz\craftcommerceuntitled\elements\db;
 
+use batchnz\craftcommerceuntitled\models\VariantConfigurationSetting;
 use batchnz\craftcommerceuntitled\records\VariantConfiguration as VariantConfigurationRecord;
 
 use Craft;
+use craft\base\ElementInterface;
 use craft\elements\db\ElementQuery;
 use craft\helpers\Db;
+use craft\helpers\Json;
 
 /**
  * Query class for the variant configuration query element
@@ -56,7 +59,7 @@ class VariantConfigurationQuery extends ElementQuery {
     }
 
     /**
-     * inheritdox
+     * inheritdoc
      * @author Josh Smith <josh@batch.nz>
      * @return boolean
      */
@@ -72,8 +75,10 @@ class VariantConfigurationQuery extends ElementQuery {
 
         $this->query->select([
             "$tableName.id",
-            "$tableName.typeId",
             "$tableName.productId",
+            "$tableName.typeId",
+            "$tableName.fields",
+            "$tableName.settings",
         ]);
 
         if ($this->typeId) {
@@ -85,5 +90,33 @@ class VariantConfigurationQuery extends ElementQuery {
         }
 
         return parent::beforePrepare();
+    }
+
+    /**
+     * Creates a Variant Configuration Element from the query result
+     * @author Josh Smith <josh@batch.nz>
+     * @param  array  $row
+     * @return VariantConfiguration
+     */
+    public function createElement(array $row): ElementInterface
+    {
+        $element = parent::createElement($row);
+
+        try {
+            $element->fields = Json::decodeIfJson($element->fields);
+            $element->settings = Json::decodeIfJson($element->settings);
+
+            // Populate the variant configuration settings
+            if( is_array($element->settings) ){
+                foreach ($element->settings as $key => $setting) {
+                    $element->settings[$key] = new VariantConfigurationSetting($setting);
+                }
+            }
+
+        } catch(\Exception $e){
+            // Swallow it whole
+        }
+
+        return $element;
     }
 }
