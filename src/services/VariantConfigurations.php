@@ -64,23 +64,45 @@ class VariantConfigurations extends Component
         $product = $configuration->getProduct();
         $permutation = $configuration->getVariantPermutations();
 
-        foreach ($permutation as &$fieldValues) {
+        $fields = [];
+        foreach ($permutation as $fieldValues) {
             // Transform values in the permutation
             foreach ($fieldValues as $handle => $value) {
                 $field = $configuration->getFieldByHandle($handle);
 
+                // Assign the value
+                $fields[$handle] = $value;
+
                 // Relation fields require the value to be an array
                 if( $field instanceof BaseRelationField ){
-                    $fieldValues[$handle] = [$value];
+                    $fields[$handle] = [$value];
                 }
+            }
+
+            // Fetch variant configuration settings
+            $priceSettings = $configuration->settings['price'] ?? null;
+            $stockSettings = $configuration->settings['stock'] ?? null;
+            // $imagesSettings = $configuration->settings['images'] ?? null;
+
+            // Determine pricing based on field
+            if( !empty($priceSettings) && $priceSettings->method === 'field' ){
+                $elementId = $fieldValues[$priceSettings->field] ?? null;
+                $price = $priceSettings->values[$elementId] ?? null;
+            }
+
+            // Determine stock based on field
+            if( !empty($stockSettings) && $stockSettings->method === 'field' ){
+                $elementId = $fieldValues[$stockSettings->field] ?? null;
+                $stock = $stockSettings->values[$elementId] ?? null;
             }
 
             // Todo, work out SKU, price, stock etc.
             $variantData = [
-                'price' => '0.00',
+                'price' => $price ?? 0.00,
+                'stock' => $stock ?? null,
                 'minQty' => null,
                 'maxQty' => null,
-                'fields' => $fieldValues
+                'fields' => $fields
             ];
 
             // Populate the variant element
