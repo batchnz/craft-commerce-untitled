@@ -3,7 +3,9 @@
 
 namespace batchnz\craftcommerceuntitled\controllers;
 
+use batchnz\craftcommerceuntitled\Plugin;
 use batchnz\craftcommerceuntitled\enums\ProductVariantType;
+use batchnz\craftcommerceuntitled\assetbundles\craftcommerceuntitled\CraftCommerceUntitledAsset as CraftCommerceUntitledBundle;
 
 use Craft;
 use craft\base\controller;
@@ -67,6 +69,15 @@ class ProductsController extends CommerceProductsController
         //     ->all();
 
         $product->setVariants([]);
+
+        // Load the main plugin scripts
+        $this->view->registerAssetBundle(CraftCommerceUntitledBundle::class);
+        $this->view->registerJs('Craft.CommerceUntitled.pluginHandle = "'.Plugin::getInstance()->id.'";');
+        $this->view->registerJs('Craft.CommerceUntitled.apiVersion = "'.Plugin::getInstance()->apiVersion.'";');
+        $this->view->registerJs('new Craft.CommerceUntitled({
+            productId: ' . $product->id . ',
+            productTypeId: ' . $product->getType()->id . '
+        });');
 
         // Carry on as normal with a preloaded product
         // This prevents the page from crawling to a halt with a large variant set

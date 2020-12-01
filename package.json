@@ -19,5 +19,7 @@
     "url": "https://github.com/batchnz/craft-commerce-untitled/issues"
   },
   "homepage": "https://github.com/batchnz/craft-commerce-untitled#readme",
-  "devDependencies": {}
+  "devDependencies": {
+    "prettier": "^2.2.0"
+  }
 }

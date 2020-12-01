@@ -54,10 +54,13 @@ class CraftCommerceUntitledAsset extends AssetBundle
         // when this asset bundle is registered
         $this->js = [
             'js/CraftCommerceUntitled.js',
+            'js/CraftCommerceUntitled.js',
+            'js/DataTables/datatables.min.js',
         ];
 
         $this->css = [
             'css/CraftCommerceUntitled.css',
+            'js/DataTables/datatables.min.css',
         ];
 
         parent::init();
