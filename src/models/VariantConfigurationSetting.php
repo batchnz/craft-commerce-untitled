@@ -5,6 +5,8 @@ namespace batchnz\craftcommerceuntitled\models;
 use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationModel;
 
 use craft\base\Model;
+use craft\commerce\elements\Variant;
+use craft\commerce\elements\db\VariantQuery;
 
 /**
  * Represents a configuration type
@@ -19,6 +21,30 @@ class VariantConfigurationSetting extends Model
     public $field;
     public $method;
     public $values;
+
+    /**
+     * Returns a variant query to fetch variants that match the configuration settings
+     * @author Josh Smith <josh@batch.nz>
+     * @return VariantQuery
+     */
+    public function getVariantQuery(): VariantQuery
+    {
+        $variantQuery = Variant::find();
+
+        switch ($this->method) {
+            // Populates the variant query with field values
+            case 'field':
+                if( !empty($this->field) && is_array($this->values) ){
+                    $variantQuery->{$this->field}(array_keys($this->values));
+                }
+                break;
+
+            default:
+                break;
+        }
+
+        return $variantQuery;
+    }
 
     public function rules()
     {

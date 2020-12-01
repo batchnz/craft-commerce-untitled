@@ -386,7 +386,9 @@ class VariantConfiguration extends Element
      */
     public function fields()
     {
-        $baseElementFields = [
+        $baseFields = parent::fields();
+
+        $fields = [
             'id',
             'productId',
             'typeId',
@@ -399,6 +401,14 @@ class VariantConfiguration extends Element
             'dateDeleted',
             'status',
         ];
+
+        // Filter out the fields we want
+        $baseElementFields = array_intersect_key($baseFields, array_flip($fields));
+
+        // Add in the variant count
+        $baseElementFields['numberOfVariants'] = function(){
+            return $this->getVariantsCount();
+        };
 
         $customElementFields = [];
         foreach ($this->fieldLayoutFields() as $field) {
@@ -475,6 +485,20 @@ class VariantConfiguration extends Element
         $fieldMap = array_intersect_key($configurationData, array_flip($fieldHandles));
 
         return ArrayHelper::cartesian($fieldMap);
+    }
+
+    /**
+     * Returns the number of variants associated with this configuration
+     * @author Josh Smith <josh@batch.nz>
+     * @return int
+     */
+    public function getVariantsCount(): int
+    {
+        $count = 0;
+        foreach ($this->settings as $setting) {
+            $count += $setting->getVariantQuery()->count();
+        }
+        return $count;
     }
 
     /**

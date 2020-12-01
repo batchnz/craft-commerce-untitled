@@ -19,7 +19,6 @@ use Craft;
 use yii\rest\Controller;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
-use yii\web\UnprocessableEntityHttpException;
 
 /**
  * Variant Configurations Controller
