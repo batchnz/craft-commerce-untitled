@@ -10,10 +10,11 @@
 
 namespace batchnz\craftcommerceuntitled\assetbundles\craftcommerceuntitled;
 
+use nystudio107\twigpack\helpers\Manifest as ManifestHelper;
+
 use Craft;
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
-use craft\web\assets\vue\VueAsset;
 
 use yii\web\JqueryAsset;
 
@@ -45,6 +46,8 @@ class CraftCommerceUntitledAsset extends AssetBundle
      */
     public function init()
     {
+        $twigpackConfig = $this->getConfig('twigpack');
+
         // define the path that your publishable resources live
         $this->sourcePath = "@batchnz/craftcommerceuntitled/assetbundles/craftcommerceuntitled/dist";
 
@@ -52,22 +55,40 @@ class CraftCommerceUntitledAsset extends AssetBundle
         $this->depends = [
             CpAsset::class,
             JqueryAsset::class,
-            VueAsset::class,
         ];
 
         // define the relative path to CSS/JS files that should be registered with the page
         // when this asset bundle is registered
         $this->js = [
-            'js/CraftCommerceUntitled.js',
-            'js/CraftCommerceUntitled.js',
             'js/DataTables/datatables.min.js',
+            ManifestHelper::getModule($twigpackConfig, 'app.js'),
         ];
 
         $this->css = [
-            'css/CraftCommerceUntitled.css',
+            // 'css/CraftCommerceUntitled.css',
             'js/DataTables/datatables.min.css',
         ];
 
         parent::init();
+    }
+
+    /**
+     * Resolves a plugin config file
+     * @author Josh Smith <josh@batch.nz>
+     * @param  string $module
+     * @return array
+     */
+    protected function getConfig(string $module): array
+    {
+        $configService = Craft::$app->getConfig();
+
+        $origConfigDir = $configService->configDir;
+
+        $configService->configDir = Craft::getAlias('@batchnz/craftcommerceuntitled/config');
+        $config = Craft::$app->config->getConfigFromFile($module);
+
+        $configService->configDir = $origConfigDir;
+
+        return $config ?? [];
     }
 }
