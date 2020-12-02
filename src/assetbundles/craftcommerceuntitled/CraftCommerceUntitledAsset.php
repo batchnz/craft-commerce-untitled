@@ -13,6 +13,9 @@ namespace batchnz\craftcommerceuntitled\assetbundles\craftcommerceuntitled;
 use Craft;
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
+use craft\web\assets\vue\VueAsset;
+
+use yii\web\JqueryAsset;
 
 /**
  * CraftCommerceUntitledAsset AssetBundle
@@ -48,6 +51,8 @@ class CraftCommerceUntitledAsset extends AssetBundle
         // define the dependencies
         $this->depends = [
             CpAsset::class,
+            JqueryAsset::class,
+            VueAsset::class,
         ];
 
         // define the relative path to CSS/JS files that should be registered with the page

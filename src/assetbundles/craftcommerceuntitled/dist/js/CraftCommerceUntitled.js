@@ -87,16 +87,8 @@
       productId: null,
       productTypeId: null,
     },
-    data: {},
     closeOtherModals: true,
     shadeClass: "modal-shade dark",
-    isLoading: true,
-    variantConfigurations: [],
-    variantConfigurationTypeFields: [],
-    $table: $(),
-    $form: $(),
-    $body: $(),
-    $footer: $(),
 
     init(settings) {
       const self = this;
@@ -106,373 +98,446 @@
         settings
       );
 
-      this.$form = $(
-        `<form class="modal elementselectormodal" method="post" accept-charset="UTF-8">
-          ${Craft.getCsrfInput()}
-        </form>`
+      // Register Vue components
+      this.registerComponents();
+
+      // Append the root element
+      this.$container = $(
+        `<div class="modal elementselectormodal">
+          <div id="variant-configuration-app" />
+        </div>`
       ).appendTo(Garnish.$bod);
 
-      // Append base nodes to the form
-      this.$body = $("<div />").appendTo(this.$form);
-      this.$footer = $("<div />").appendTo(this.$form);
+      const vm = new Vue({
+        el: "#variant-configuration-app",
+        data: {
+          step: 2,
+          totalSteps: 5,
+          variantConfigurations: [],
+          variantConfigurationTypeFields: [],
+          isLoading: true,
+          state: {},
+          defaults: {
+            header: {
+              title: "Variant Configurator",
+              subtitle: "Select or create a variant configuration",
+            },
+            footer: {
+              priBtnText: "Next Step",
+              secBtnText: "Previous",
+            },
+          },
+          variantConfiguration: {
+            id: null,
+            title: "",
+            fields: ["paintColour"],
+            values: [],
+            settings: {},
+          },
+        },
+        async created() {
+          this.isLoading = true;
+          this.state = this.getStateMachine();
 
-      // Render the index step
-      this.goToStep("index");
+          // Load configurations
+          const vcRes = await self.getVariantConfigurations({
+            productId: self.settings.productId,
+          });
+          this.variantConfigurations = vcRes.data;
 
-      this.base(this.$form, settings);
-    },
+          // Load fields
+          const vcTypeFieldsRes = await self.getVariantConfigurationTypeFields({
+            productTypeId: self.settings.productTypeId,
+          });
+          this.variantConfigurationTypeFields = vcTypeFieldsRes.data;
 
-    /**
-     * Handles the form step change
-     * @author Josh Smith <josh@batch.nz>
-     * @return void
-     */
-    handleFormStep(e) {
-      const {
-        data: { step },
-      } = e;
-      return this.goToStep(step);
-    },
+          this.isLoading = false;
+        },
+        methods: {
+          /**
+           * Navigate between form steps
+           * @author Josh Smith <josh@batch.nz>
+           * @param  int  step
+           * @return void
+           */
+          navigate(step) {
+            if (step < 0) {
+              return self.hide();
+            }
+            if (step >= this.totalSteps) {
+              return;
+            }
+            this.step = step;
+          },
 
-    /**
-     * Renders the form step
-     * @author Josh Smith <josh@batch.nz>
-     * @param  int step
-     * @return void
-     */
-    goToStep(step = null) {
-      switch (step) {
-        case 1:
-          return this.renderNameStep();
-        case 2:
-          return this.renderFieldsStep();
-        case 3:
-          return this.renderValuesStep();
-        case 4:
-          return this.renderSettingsStep();
-        case "index":
-          return this.renderIndex();
-        default:
-          return this.hide();
-      }
-    },
+          /**
+           * Returns the application state for each form step
+           * @author Josh Smith <josh@batch.nz>
+           * @return object
+           */
+          getStateMachine() {
+            switch (this.step) {
+              case 0:
+              default:
+                return {
+                  currentStepComponent: "VCIndexStep",
+                  header: this.defaults.header,
+                  footer: {
+                    priBtnText: "Create New",
+                    secBtnText: "Cancel",
+                  },
+                };
 
-    /**
-     * Renders the index step
-     * @author Josh Smith <josh@batch.nz>
-     * @return void
-     */
-    renderIndex() {
-      this.updateBody();
-      this.updateFooter();
-      this.initVCTable();
-    },
+              case 1:
+                return {
+                  currentStepComponent: "VCNameStep",
+                  currentStepKey: this.variantConfiguration.title,
+                  header: {
+                    ...this.defaults.header,
+                    subtitle: "Step 1. Set the configuration name",
+                  },
+                  footer: this.defaults.footer,
+                };
 
-    /**
-     * Renders the configuration name caputure step
-     * @author Josh Smith <josh@batch.nz>
-     * @return void
-     */
-    renderNameStep() {
-      const content = `
-        <div class="field width-100">
-          <div class="heading">
-            <label for="configuration-name">Name</label>
+              case 2:
+                return {
+                  currentStepComponent: "VCFieldsStep",
+                  currentStepKey: "fields",
+                  header: {
+                    ...this.defaults.header,
+                    subtitle:
+                      "Step 2. Select the fields to generate variants from",
+                  },
+                  footer: this.defaults.footer,
+                };
+
+              case 3:
+                return {
+                  currentStepComponent: "VCValuesStep",
+                  currentStepKey: "values",
+                  header: {
+                    ...this.defaults.header,
+                    subtitle:
+                      "Step 3. Select the values to generate variants from",
+                  },
+                  footer: this.defaults.footer,
+                };
+
+              case 4:
+                return {
+                  currentStepComponent: "VCSettingsStep",
+                  currentStepKey: "settings",
+                  header: {
+                    ...this.defaults.header,
+                    subtitle: "Step 4. Set the configuration settings",
+                  },
+                  footer: this.defaults.footer,
+                };
+            }
+          },
+        },
+        watch: {
+          step() {
+            this.state = this.getStateMachine();
+          },
+        },
+        template: `
+          <div>
+            <div class="body">
+              <div class="content-summary">
+                <VCHeader
+                  :title="state.header.title"
+                  :subtitle="state.header.subtitle"
+                />
+              </div>
+              <VCLoading v-if="isLoading" />
+              <component
+                v-if="!isLoading"
+                v-model="variantConfiguration[state.currentStepKey]"
+                :is="state.currentStepComponent"
+                :vc="variantConfigurations"
+                :vcFields="variantConfigurationTypeFields"
+              />
+            </div>
+            <VCFooter
+              :isLoading="isLoading"
+              :priBtnText="state.footer.priBtnText"
+              :secBtnText="state.footer.secBtnText"
+              @priBtnClick="navigate(step+1)"
+              @secBtnClick="navigate(step-1)"
+            />
           </div>
-          <div id="configuration-name-instructions" class="instructions">
-            <p>Give your configuration a name e.g. "Accent Colours"</p>
-          </div>
-          <div class="input ltr">
-            <textarea id="configuration-name" class="nicetext text" name="name" rows="1" cols="50" placeholder="" style="min-height: 32px;"></textarea>
-          </div>
-        </div>
-      `;
-
-      this.updateBody({
-        subTitle: "Step 1. Set the configuration name",
-        content,
+        `,
       });
-      this.updateFooter("Next", 2, "Previous", "index");
 
-      // Update the title property on keyup
-      this.$body.find("#configuration-name").on("keyup", (e) => {
-        this.data.title = e.target.value;
-      });
+      this.base(this.$container, settings);
     },
 
     /**
-     * Renders the fields selection form step
-     * Allows the user to pick a selection of fields to generate variants from
+     * Registers Vue components
      * @author Josh Smith <josh@batch.nz>
      * @return void
      */
-    renderFieldsStep() {
-      let $fieldsLoadPromise = new $.Deferred();
-      const subTitle = "Step 2. Select the fields to generate variants from";
+    registerComponents() {
+      const self = this;
 
-      this.updateBody({
-        subTitle,
-        content: this.getLoadingElement()[0].outerHTML,
+      Vue.component("VCHeader", {
+        props: {
+          title: String,
+          subtitle: String,
+        },
+        template: `
+          <div>
+            <h1 style="font-size: 20px;font-weight: bold;">
+              {{title}}
+            </h1>
+            <p style="margin-bottom: 2rem !important;">
+              {{subtitle}}
+            </p>
+          </div>
+        `,
       });
 
-      this.updateFooter("Next", 3, "Previous", 1);
+      Vue.component("VCIndexStep", {
+        data() {
+          return {
+            dt: null,
+          };
+        },
+        mounted() {
+          this.dt = $(this.$refs.table).DataTable({ data: this.dtData });
+        },
+        beforeDestroy() {
+          this.dt.destroy();
+        },
+        props: {
+          vc: {
+            type: Array,
+            default() {
+              return [];
+            },
+          },
+        },
+        computed: {
+          dtData() {
+            const data = [];
+            this.vc.forEach((vc) => {
+              const dateUpdated =
+                vc.dateUpdated == null
+                  ? null
+                  : new Date(vc.dateUpdated).toLocaleDateString();
+              data.push([vc.title, vc.numberOfVariants, dateUpdated]);
+            });
+            return data;
+          },
+        },
+        template: `
+          <div>
+            <table ref="table" id="variant_configurations" class="display">
+              <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Number of Variants</th>
+                    <th>Last Updated</th>
+                  </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        `,
+      });
 
-      this.setModalLoading();
+      Vue.component("VCNameStep", {
+        props: {
+          value: String,
+        },
+        template: `
+          <div class="field width-100">
+            <div class="heading">
+              <label for="configuration-name">Name</label>
+            </div>
+            <div id="configuration-name-instructions" class="instructions">
+              <p>Give your configuration a name e.g. "Accent Colours"</p>
+            </div>
+            <div class="input ltr">
+              <textarea
+                @input="$emit('input', $event.target.value)"
+                id="configuration-name"
+                class="nicetext text"
+                name="title" rows="1"
+                cols="50"
+                placeholder=""
+                style="min-height: 32px;"
+              >{{value}}</textarea>
+            </div>
+          </div>
+        `,
+      });
 
-      // Fetch variant configuration fields
-      if (!this.variantConfigurationTypeFields.length) {
-        $fieldsLoadPromise = this.getVariantConfigurationTypeFields({
-          productTypeId: this.settings.productTypeId,
-        }).done((res) => {
-          this.variantConfigurationTypeFields = res.data;
-        });
-      } else {
-        $fieldsLoadPromise.resolve();
-      }
+      Vue.component("VCFieldsStep", {
+        props: {
+          vcFields: Array,
+          value: Array,
+        },
+        data() {
+          return {
+            model: this.value,
+          };
+        },
+        methods: {
+          toggleSelectAll() {
+            if (this.isAllSelected) {
+              return (this.model = []);
+            }
 
-      // Render the options
-      $fieldsLoadPromise
-        .done(() => {
-          const $content = $(`
+            this.model = [];
+            this.vcFields.forEach((field) => {
+              this.model.push(field.handle);
+            });
+          },
+        },
+        computed: {
+          isAllSelected() {
+            const handles = this.vcFields.map((field) => field.handle);
+            const filteredArray = handles.filter((value) =>
+              this.model.includes(value)
+            );
+
+            return filteredArray.length === handles.length;
+          },
+        },
+        watch: {
+          model: function (val) {
+            this.$emit("input", val);
+          },
+        },
+        template: `
           <div class="field width-100">
             <div class="heading">
               <label for="configuration-fields">Fields
-                <a href="#" style="font-size: 11px; font-weight: normal; margin-left: 2px;">Select all</a>
+                <a @click="toggleSelectAll" href="#" style="font-size: 11px; font-weight: normal; margin-left: 2px;">{{isAllSelected ? 'Unselect all' : 'Select all'}}</a>
               </label>
             </div>
             <div class="input ltr">
               <fieldset class="checkbox-group">
-                ${this.variantConfigurationTypeFields
-                  .map(
-                    (field) => `
-                      <div>
-                        <input type="checkbox" id="fields-${field.handle}" class="checkbox js--fields-checkbox" name="fields[]" value="${field.handle}">
-                        <label for="fields-${field.handle}">
-                          ${field.name}
-                        </label>
-                      </div>`
-                  )
-                  .join("")}
+                <div v-for="field in vcFields">
+                  <input
+                    type="checkbox"
+                    class="checkbox"
+                    name="fields[]"
+                    :id="'fields-'+field.handle"
+                    :value="field.handle"
+                    v-model="model"
+                  >
+                  <label :for="'fields-'+field.handle">
+                    {{field.name}}
+                  </label>
+                </div>
               </fieldset>
             </div>
           </div>
-        `);
-
-          this.updateBody({
-            subTitle,
-            content: $content[0].outerHTML,
-          });
-
-          this.$body.find(".js--fields-checkbox").on("change", (e) => {
-            if (!this.data.fields) {
-              this.data.fields = new Set();
-            }
-
-            if (e.target.checked) {
-              this.data.fields.add(e.target.value);
-            } else {
-              this.data.fields.delete(e.target.value);
-            }
-            console.log("this.data.fields:", this.data.fields);
-          });
-        })
-        .always(() => {
-          this.setModalLoading(false);
-        });
-    },
-
-    /**
-     * Renders the field values selection form step
-     * Allows the user to pick a selection of field values to generate variants from
-     * @author Josh Smith <josh@batch.nz>
-     * @return void
-     */
-    renderValuesStep() {
-      let $fieldsLoadPromise = new $.Deferred();
-      const subTitle = "Step 3. Select the values to generate variants from";
-
-      this.updateBody({
-        subTitle,
-        content: this.getLoadingElement()[0].outerHTML,
+        `,
       });
 
-      this.setModalLoading();
+      Vue.component("VCValuesStep", {
+        props: {
+          vcFields: Array,
+          value: Array,
+        },
+        data() {
+          return {
+            model: this.value,
+          };
+        },
+        methods: {
+          toggleSelectAll(handle) {
+            const values = this.valuesByHandle[handle];
+            if (!values.length) return;
 
-      // Fetch variant configuration fields
-      if (!this.variantConfigurationTypeFields.length) {
-        $fieldsLoadPromise = this.getVariantConfigurationTypeFields({
-          productTypeId: this.settings.productTypeId,
-        }).done((res) => {
-          this.variantConfigurationTypeFields = res.data;
-        });
-      } else {
-        $fieldsLoadPromise.resolve();
-      }
+            if (!this.isAllSelected(handle)) {
+              this.model = [...this.model, ...values];
+            } else {
+              this.model = this.model.filter(
+                (value) => values.indexOf(value) === -1
+              );
+            }
+          },
+          isAllSelected(handle) {
+            const values = this.valuesByHandle[handle];
 
-      // Render the options
-      $fieldsLoadPromise
-        .done(() => {
-          const $content = $("<div />");
+            const filteredArray = values.filter((value) =>
+              this.model.includes(value)
+            );
 
-          this.variantConfigurationTypeFields.forEach((field) => {
-            $content.append(`
-            <div class="field width-100">
+            return filteredArray.length === values.length;
+          },
+        },
+        computed: {
+          valuesByHandle() {
+            const values = {};
+            this.vcFields.forEach((field) => {
+              values[field.handle] = field.values.map(({ value }) => value);
+            });
+            return values;
+          },
+        },
+        watch: {
+          model: function (val) {
+            this.$emit("input", val);
+          },
+        },
+        template: `
+          <div>
+            <div v-for="field in vcFields" class="field width-100">
               <div class="heading">
-                <label for="configuration-fields">${field.name}
-                  <a href="#" style="font-size: 11px; font-weight: normal; margin-left: 2px;">Select all</a>
+                <label for="configuration-fields">{{field.name}}
+                  <a @click="toggleSelectAll(field.handle)" href="#" style="font-size: 11px; font-weight: normal; margin-left: 2px;">{{isAllSelected(field.handle) ? 'Unselect all' : 'Select all' }}</a>
                 </label>
               </div>
               <div class="input ltr">
                 <fieldset class="checkbox-group" style="display: flex; flex-wrap: wrap;">
-                  ${field.values
-                    .map(
-                      ({ label, value }) => `<div style="width: 25%;">
-                        <input type="checkbox" id="fields-${value}" class="checkbox" name="fields[]" value="${value}">
-                        <label for="fields-${value}">
-                          ${label}
-                        </label>
-                      </div>`
-                    )
-                    .join("")}
+                  <div v-for="{label, value} in field.values" style="width: 25%;">
+                    <input type="checkbox" :id="'fields-'+value" class="checkbox" name="fields[]" :value="value" v-model="model">
+                    <label :for="'fields-'+value">
+                      {{label}}
+                    </label>
+                  </div>
                 </fieldset>
               </div>
             </div>
-          `);
-          });
+          </div>
+        `,
+      });
 
-          this.updateBody({
-            subTitle,
-            content: $content.html(),
-          });
-        })
-        .always(() => {
-          this.setModalLoading(false);
-        });
+      Vue.component("VCFooter", {
+        props: {
+          isLoading: Boolean,
+          priBtnText: String,
+          secBtnText: String,
+        },
+        template: `
+          <div class="footer">
+            <div class="buttons right">
+              <button @click="$emit('secBtnClick')" class="btn">{{secBtnText}}</button>
+              <button
+                @click="$emit('priBtnClick')"
+                :disabled="isLoading"
+                :class="{disabled: isLoading}"
+                class="btn submit"
+              >{{priBtnText}}</button>
+            </div>
+          </div>
+        `,
+      });
 
-      this.updateFooter("Next", 4, "Previous", 2);
-    },
-
-    /**
-     * Renders the settings selection form step
-     * Allows the user to set configuration settings
-     * @author Josh Smith <josh@batch.nz>
-     * @return void
-     */
-    renderSettingsStep() {},
-
-    /**
-     * Helper function to update the modal body
-     * @author Josh Smith <josh@batch.nz>
-     * @return void
-     */
-    updateBody({ title, subTitle, content } = {}) {
-      return this.$body.html(this.getBodyElement({ title, subTitle, content }));
-    },
-
-    /**
-     * Helper function to update the modal footer
-     * @author Josh Smith <josh@batch.nz>
-     * @param  string btnPriText
-     * @param  int    btnPriStep
-     * @param  string btnSecText
-     * @param  int    btnSecStep
-     * @return void
-     */
-    updateFooter(btnPriText, btnPriStep = 1, btnSecText, btnSecStep) {
-      this.$footer.html(
-        this.getFooterElement({
-          btnPriText,
-          btnSecText,
-          cb: ({ $btnPri, $btnSec }) => {
-            this.addListener(
-              $btnPri,
-              "click",
-              { step: btnPriStep },
-              "handleFormStep"
-            );
-            this.addListener(
-              $btnSec,
-              "click",
-              { step: btnSecStep },
-              "handleFormStep"
-            );
-          },
-        })
-      );
-    },
-
-    /**
-     * Method to update the modal loading state
-     * @author Josh Smith <josh@batch.nz>
-     * @param  {Boolean} loading
-     */
-    setModalLoading(loading = true) {
-      if (loading) {
-        this.$footer
-          .find(".btn.submit")
-          .attr("disabled", "disabled")
-          .addClass("disabled");
-      } else {
-        this.$footer
-          .find(".btn.submit")
-          .removeAttr("disabled")
-          .removeClass("disabled");
-      }
-    },
-
-    /**
-     * Initialises the variant configurations datatable
-     * @author Josh Smith <josh@batch.nz>
-     * @return Promise
-     */
-    initVCTable() {
-      let $loadVCPromise = new $.Deferred();
-
-      this.$body.find(".js--content").append(`
-        <div class="js--datatable">
-          ${this.getLoadingElement()[0].outerHTML}
-        </div>
-      `);
-
-      this.setModalLoading();
-
-      // Load the variant configurations
-      if (this.variantConfigurations.length) {
-        $loadVCPromise.resolve();
-      } else {
-        $loadVCPromise = this.getVariantConfigurations({
-          productId: this.settings.productId,
-        }).done((configurations) => {
-          this.variantConfigurations = configurations.data;
-        });
-      }
-
-      $loadVCPromise
-        .done(() => {
-          const $content = this.$form.find(".js--content");
-          $content.html("");
-
-          // Create the table element
-          this.$table = this.getTableElement().appendTo($content);
-
-          // Assemble table data
-          const data = [];
-          this.variantConfigurations.forEach((vc) => {
-            const dateUpdated =
-              vc.dateUpdated == null
-                ? null
-                : new Date(vc.dateUpdated).toLocaleDateString();
-            data.push([vc.title, vc.numberOfVariants, dateUpdated]);
-          });
-
-          // Init the DataTable
-          this.$table.DataTable({ data });
-
-          return $loadVCPromise;
-        })
-        .always(() => {
-          this.setModalLoading(false);
-        });
+      Vue.component("VCLoading", {
+        template: `
+          <div style="display:flex; align-items: center;">
+            Loading...
+            <span class="spinner"></span>
+          </div>
+        `,
+      });
     },
 
     /**
@@ -500,118 +565,6 @@
           params
         ),
       });
-    },
-
-    /**
-     * Returns the Body HTML
-     * @author Josh Smith <josh@batch.nz>
-     * @param  {String} options.title
-     * @param  {String} options.subTitle
-     * @return {object}
-     */
-    getBodyElement({ title, subTitle, content } = {}) {
-      return $(`
-        <div class="body">
-          <div class="content-summary">
-            ${this.getHeadingElement({ title, subTitle })[0].outerHTML}
-          </div>
-          <div class="js--content">
-            ${content || ``}
-          </div>
-        </div>
-      `);
-    },
-
-    /**
-     * Returns the footer element
-     * @author Josh Smith <josh@batch.nz>
-     * @param  {function} cb
-     * @return {object}
-     */
-    getFooterElement({ btnSecText, btnPriText, cb = () => {} } = {}) {
-      // Footer + Buttons
-      const $footer = $(`<div class="footer" />`);
-
-      const $btnContainer = $('<div class="buttons right fab-my-0"/>').appendTo(
-        $footer
-      );
-
-      const $btnSec = $(
-        '<div class="btn">' + Craft.t("app", btnSecText || "Cancel") + "</div>"
-      ).appendTo($btnContainer);
-
-      const $btnPri = $(
-        '<div class="btn submit">' +
-          Craft.t("app", btnPriText || "Create New") +
-          "</div>"
-      ).appendTo($btnContainer);
-
-      // Run a callback function to give an opportunity to assign event handlers to the buttons
-      if (typeof cb === "function") {
-        cb({ $footer, $btnContainer, $btnSec, $btnPri });
-      } else {
-        // Hide the modal when the cancel button is clicked
-        this.addListener($btnSec, "click", "hide");
-      }
-
-      return $footer;
-    },
-
-    /**
-     * Returns the modal heading HTML
-     * @author Josh Smith <josh@batch.nz>
-     * @param  {String} options.title
-     * @param  {String} options.subTitle
-     * @return {object}
-     */
-    getHeadingElement({
-      title = "Variant Configurator",
-      subTitle = "Select or create a variant configuration",
-    } = {}) {
-      return $(`<div>
-        <h1 style="font-size: 20px;font-weight: bold;">
-          ${title}
-        </h1>
-        <p style="margin-bottom: 2rem !important;">
-          ${subTitle}
-        </p>
-        </div>
-      `);
-    },
-
-    /**
-     * Returns the base data tables HTML
-     * @author Josh Smith <josh@batch.nz>
-     * @return {object}
-     */
-    getTableElement() {
-      return $(`
-        <table id="variant_configurations" class="display">
-          <thead>
-              <tr>
-                  <th>Name</th>
-                  <th>Number of Variants</th>
-                  <th>Last Updated</th>
-              </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      `);
-    },
-
-    /**
-     * Returns the loading element
-     * @author Josh Smith <josh@batch.nz>
-     * @return object
-     */
-    getLoadingElement({ loadingText = "Loading" } = {}) {
-      return $(`
-        <div style="display:flex; align-items: center;">
-          ${loadingText}...
-          <span class="spinner"></span>
-        </div>
-      `);
     },
   });
 })(jQuery);
