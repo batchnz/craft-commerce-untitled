@@ -86,15 +86,17 @@
 </template>
 
 <script>
+import Vue from "vue";
+
 export default {
   props: {
-    value: Array,
+    value: Object,
     fields: Array,
     vc: Object,
   },
   data() {
     return {
-      types: ["price", "stock", "images"],
+      types: ["price", "stock"],
       model: {},
     };
   },
@@ -109,7 +111,6 @@ export default {
           values: {},
         }
       );
-      Vue.set(this.fieldSelection, type, null);
     });
   },
   computed: {

@@ -110,37 +110,17 @@ import App from "./components/App.vue";
       ).appendTo(Garnish.$bod);
 
       new Vue({
-        render: (h) => h(App),
-      }).$mount("#variant-configuration-app");
+        el: "#variant-configuration-app",
+        render: (h) =>
+          h(App, {
+            props: {
+              productId: this.settings.productId,
+              productTypeId: this.settings.productTypeId,
+            },
+          }),
+      });
 
       this.base(this.$container, settings);
-    },
-
-    /**
-     * Fetches variant configurations from the API
-     * @author Josh Smith <josh@batch.nz>
-     * @return Promise
-     */
-    getVariantConfigurations(params = {}) {
-      return $.ajax({
-        method: "GET",
-        url: Craft.CommerceUntitled.getApiUrl("variant-configurations", params),
-      });
-    },
-
-    /**
-     * Fetches variant configuration type fields from the API
-     * @author Josh Smith <josh@batch.nz>
-     * @return Promise
-     */
-    getVariantConfigurationTypeFields(params = {}) {
-      return $.ajax({
-        method: "GET",
-        url: Craft.CommerceUntitled.getApiUrl(
-          "variant-configuration-types/fields",
-          params
-        ),
-      });
     },
   });
 })(jQuery);

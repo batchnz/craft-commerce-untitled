@@ -37,9 +37,13 @@ import {
 } from "./Steps";
 
 export default {
+  props: {
+    productId: null,
+    productTypeId: null,
+  },
   data() {
     return {
-      step: 4,
+      step: 0,
       totalSteps: 5,
       variantConfigurations: [],
       variantConfigurationTypeFields: [],
@@ -58,8 +62,8 @@ export default {
       variantConfiguration: {
         id: null,
         title: "",
-        fields: ["paintColour"],
-        values: [5089, 5090, 5091],
+        fields: [],
+        values: [],
         settings: {},
       },
     };
@@ -69,14 +73,15 @@ export default {
     this.state = this.getState();
 
     // Load configurations
-    const vcRes = await self.getVariantConfigurations({
-      productId: self.settings.productId,
+    const vcRes = await this.getVariantConfigurations({
+      productId: this.productId,
     });
+
     this.variantConfigurations = vcRes.data;
 
     // Load fields
-    const vcTypeFieldsRes = await self.getVariantConfigurationTypeFields({
-      productTypeId: self.settings.productTypeId,
+    const vcTypeFieldsRes = await this.getVariantConfigurationTypeFields({
+      productTypeId: this.productTypeId,
     });
     this.variantConfigurationTypeFields = vcTypeFieldsRes.data;
 
@@ -164,6 +169,33 @@ export default {
             },
           };
       }
+    },
+
+    /**
+     * Fetches variant configurations from the API
+     * @author Josh Smith <josh@batch.nz>
+     * @return Promise
+     */
+    async getVariantConfigurations(params = {}) {
+      const response = await fetch(
+        Craft.CommerceUntitled.getApiUrl("variant-configurations", params)
+      );
+      return await response.json();
+    },
+
+    /**
+     * Fetches variant configuration type fields from the API
+     * @author Josh Smith <josh@batch.nz>
+     * @return Promise
+     */
+    async getVariantConfigurationTypeFields(params = {}) {
+      const response = await fetch(
+        Craft.CommerceUntitled.getApiUrl(
+          "variant-configuration-types/fields",
+          params
+        )
+      );
+      return await response.json();
     },
   },
   watch: {
