@@ -7,15 +7,44 @@ const path = require("path");
 const configurePlugins = (options) => {
   const plugins = [
     new VueLoaderPlugin(),
-    new CleanWebpackPlugin(),
-    new ManifestPlugin(),
+    new ManifestPlugin(configureManifest("manifest.json")),
   ];
 
   if (options.mode === "development") {
     plugins.push(new webpack.HotModuleReplacementPlugin());
   }
 
+  if (options.mode === "production") {
+    plugins.push(
+      new CleanWebpackPlugin({
+        cleanOnceBeforeBuildPatterns: [
+          path.resolve(__dirname, "dist/js/"),
+          path.resolve(__dirname, "dist/manifest.json"),
+        ],
+      })
+    );
+  }
+
   return plugins;
+};
+
+const configureManifest = (fileName) => {
+  return {
+    fileName: fileName,
+    basePath: "",
+    map: (file) => {
+      file.name = file.name.replace(/(\.[a-f0-9]{32})(\..*)$/, "$2");
+      return file;
+    },
+  };
+};
+
+const configurePublicPath = (options) => {
+  if (options.mode === "development") {
+    return (process.env.DEVSERVER_PUBLIC || "http://localhost:8080") + "/";
+  }
+
+  return process.env.PUBLIC_PATH || "/dist/";
 };
 
 module.exports = (env, options) => {
@@ -25,8 +54,8 @@ module.exports = (env, options) => {
     },
     output: {
       filename: path.join("./js", "[name].[hash].js"),
-      publicPath:
-        (process.env.DEVSERVER_PUBLIC || "http://localhost:8080") + "/",
+      publicPath: configurePublicPath(options),
+      path: path.resolve(__dirname, "dist/"),
     },
     module: {
       rules: [

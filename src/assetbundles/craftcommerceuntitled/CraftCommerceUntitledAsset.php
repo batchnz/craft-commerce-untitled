@@ -60,16 +60,47 @@ class CraftCommerceUntitledAsset extends AssetBundle
         // define the relative path to CSS/JS files that should be registered with the page
         // when this asset bundle is registered
         $this->js = [
-            'js/DataTables/datatables.min.js',
-            ManifestHelper::getModule($twigpackConfig, 'app.js'),
+            'libs/DataTables/datatables.min.js'
         ];
 
+        // Load the correct webpack files
+        if( Craft::$app->getConfig()->general->devMode && $this->hasDevServer() ){
+            $this->js[] = ManifestHelper::getModule($twigpackConfig, 'app.js');
+        } else {
+            $this->js[] = strstr(ManifestHelper::getModule($twigpackConfig, 'app.js'), 'js/');
+            $this->js[] = strstr(ManifestHelper::getModule($twigpackConfig, 'runtime.js'), 'js/');
+            $this->js[] = strstr(ManifestHelper::getModule($twigpackConfig, 'vendors.js'), 'js/');
+        }
+
         $this->css = [
-            // 'css/CraftCommerceUntitled.css',
-            'js/DataTables/datatables.min.css',
+            'libs/DataTables/datatables.min.css',
         ];
 
         parent::init();
+    }
+
+    /**
+     * Returns whether the dev server is up and running
+     * @author Josh Smith <josh@batch.nz>
+     * @return boolean
+     */
+    protected function hasDevServer()
+    {
+        $arrContextOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ],
+        ];
+        $devServerHost = getenv('DEVSERVER_PUBLIC');
+
+        try {
+            $contents = file_get_contents("$devServerHost/manifest.json", false, stream_context_create($arrContextOptions));
+        } catch (\Exception $exception) {
+            return false;
+        }
+
+        return !empty($contents);
     }
 
     /**

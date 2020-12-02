@@ -42,7 +42,7 @@ return [
         ],
         // Public server config
         'server' => [
-            'manifestPath' => '@webroot/',
+            'manifestPath' => '@batchnz/craftcommerceuntitled/assetbundles/craftcommerceuntitled/dist',
             'publicPath' => '/',
         ],
         // webpack-dev-server config
@@ -59,7 +59,7 @@ return [
         'cspNonce' => '',
         // Local files config
         'localFiles' => [
-            'basePath' => '@webroot/',
+            'basePath' => '@batchnz/craftcommerceuntitled/assetbundles/craftcommerceuntitled/dist',
             'criticalPrefix' => 'dist/criticalcss/',
             'criticalSuffix' => '_critical.min.css',
         ],
