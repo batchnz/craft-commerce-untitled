@@ -111,7 +111,7 @@
       const vm = new Vue({
         el: "#variant-configuration-app",
         data: {
-          step: 2,
+          step: 4,
           totalSteps: 5,
           variantConfigurations: [],
           variantConfigurationTypeFields: [],
@@ -131,13 +131,13 @@
             id: null,
             title: "",
             fields: ["paintColour"],
-            values: [],
+            values: [5089, 5090, 5091],
             settings: {},
           },
         },
         async created() {
           this.isLoading = true;
-          this.state = this.getStateMachine();
+          this.state = this.getState();
 
           // Load configurations
           const vcRes = await self.getVariantConfigurations({
@@ -175,7 +175,7 @@
            * @author Josh Smith <josh@batch.nz>
            * @return object
            */
-          getStateMachine() {
+          getState() {
             switch (this.step) {
               case 0:
               default:
@@ -231,14 +231,17 @@
                     ...this.defaults.header,
                     subtitle: "Step 4. Set the configuration settings",
                   },
-                  footer: this.defaults.footer,
+                  footer: {
+                    ...this.defaults.footer,
+                    priBtnText: "Save Configuration",
+                  },
                 };
             }
           },
         },
         watch: {
           step() {
-            this.state = this.getStateMachine();
+            this.state = this.getState();
           },
         },
         template: `
@@ -255,8 +258,9 @@
                 v-if="!isLoading"
                 v-model="variantConfiguration[state.currentStepKey]"
                 :is="state.currentStepComponent"
-                :vc="variantConfigurations"
-                :vcFields="variantConfigurationTypeFields"
+                :vc="variantConfiguration"
+                :configs="variantConfigurations"
+                :fields="variantConfigurationTypeFields"
               />
             </div>
             <VCFooter
@@ -311,7 +315,7 @@
           this.dt.destroy();
         },
         props: {
-          vc: {
+          configs: {
             type: Array,
             default() {
               return [];
@@ -321,7 +325,7 @@
         computed: {
           dtData() {
             const data = [];
-            this.vc.forEach((vc) => {
+            this.configs.forEach((vc) => {
               const dateUpdated =
                 vc.dateUpdated == null
                   ? null
@@ -376,7 +380,7 @@
 
       Vue.component("VCFieldsStep", {
         props: {
-          vcFields: Array,
+          fields: Array,
           value: Array,
         },
         data() {
@@ -391,14 +395,14 @@
             }
 
             this.model = [];
-            this.vcFields.forEach((field) => {
+            this.fields.forEach((field) => {
               this.model.push(field.handle);
             });
           },
         },
         computed: {
           isAllSelected() {
-            const handles = this.vcFields.map((field) => field.handle);
+            const handles = this.fields.map((field) => field.handle);
             const filteredArray = handles.filter((value) =>
               this.model.includes(value)
             );
@@ -420,7 +424,7 @@
             </div>
             <div class="input ltr">
               <fieldset class="checkbox-group">
-                <div v-for="field in vcFields">
+                <div v-for="field in fields">
                   <input
                     type="checkbox"
                     class="checkbox"
@@ -441,8 +445,9 @@
 
       Vue.component("VCValuesStep", {
         props: {
-          vcFields: Array,
+          fields: Array,
           value: Array,
+          vc: Object,
         },
         data() {
           return {
@@ -473,9 +478,14 @@
           },
         },
         computed: {
+          availableFields() {
+            return this.fields.filter((field) =>
+              this.vc.fields.includes(field.handle)
+            );
+          },
           valuesByHandle() {
             const values = {};
-            this.vcFields.forEach((field) => {
+            this.fields.forEach((field) => {
               values[field.handle] = field.values.map(({ value }) => value);
             });
             return values;
@@ -488,7 +498,7 @@
         },
         template: `
           <div>
-            <div v-for="field in vcFields" class="field width-100">
+            <div v-for="field in availableFields" class="field width-100">
               <div class="heading">
                 <label for="configuration-fields">{{field.name}}
                   <a @click="toggleSelectAll(field.handle)" href="#" style="font-size: 11px; font-weight: normal; margin-left: 2px;">{{isAllSelected(field.handle) ? 'Unselect all' : 'Select all' }}</a>
@@ -504,6 +514,139 @@
                   </div>
                 </fieldset>
               </div>
+            </div>
+          </div>
+        `,
+      });
+
+      Vue.component("VCSettingsStep", {
+        props: {
+          value: Array,
+          fields: Array,
+          vc: Object,
+        },
+        data() {
+          return {
+            types: ["price", "stock", "images"],
+            model: {},
+          };
+        },
+        created() {
+          this.types.forEach((type) => {
+            Vue.set(
+              this.model,
+              type,
+              this.value[type] || {
+                field: null,
+                method: null,
+                values: {},
+              }
+            );
+            Vue.set(this.fieldSelection, type, null);
+          });
+        },
+        computed: {
+          availableFields() {
+            return this.fields.filter((field) =>
+              this.vc.fields.includes(field.handle)
+            );
+          },
+          availableValuesByHandle() {
+            const values = {};
+
+            // Determine what fields have been selected
+            const fields = this.fields.filter((field) =>
+              this.vc.fields.includes(field.handle)
+            );
+
+            // Loop the fields and determine the available values
+            fields.forEach((field) => {
+              values[field.handle] = [];
+              field.values.forEach((fieldVal) => {
+                if (this.vc.values.includes(fieldVal.value)) {
+                  values[field.handle].push(fieldVal);
+                }
+              });
+            });
+
+            return values;
+          },
+        },
+        watch: {
+          model: {
+            handler(val) {
+              this.$emit("input", val);
+            },
+            deep: true,
+          },
+        },
+        template: `
+          <div>
+            <div v-for="(type, i) in types" class="field width-100">
+              <div class="heading">
+                <label>{{ type.charAt(0).toUpperCase() + type.slice(1) }}</label>
+              </div>
+              <div class="input ltr">
+                <fieldset>
+                  <div>
+                    <input
+                      type="radio"
+                      class="radio"
+                      :id="'settings-'+type+'-all'"
+                      :name="'settings['+type+'][method]'"
+                      value="all"
+                      v-model="model[type].method"
+                    />
+                    <label :for="'settings-'+type+'-all'">Set {{type}} for all variants</label>
+                  </div>
+
+                  <div>
+                    <input
+                      type="radio"
+                      class="radio"
+                      :id="'settings-'+type+'-field'"
+                      :name="'settings['+type+'][method]'"
+                      value="field"
+                      v-model="model[type].method"
+                    />
+                    <label :for="'settings-'+type+'-field'">Set {{type}} per field</label>
+                  </div>
+
+                  <!-- Values per field -->
+                  <div v-if="model[type].method === 'field'" class="field" style="margin-left: 32px;">
+                    <div class="heading">
+                      <label>Choose a field</label>
+                    </div>
+                    <div class="input ltr">
+                      <select name="" id="" v-model="model[type].field">
+                        <option :value="null">Select</option>
+                        <option v-for="field in availableFields" :value="field.handle">{{field.name}}</option>
+                      </select>
+                    </div>
+                    <div v-if="model[type].field" v-for="{label, value} in availableValuesByHandle[model[type].field]" class="field">
+                      <div class="heading">
+                        <label>{{label}}</label>
+                      </div>
+                      <div class="input ltr">
+                        <input type="text" v-model="model[type].values[value]" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <input
+                      type="radio"
+                      class="radio"
+                      :id="'settings-'+type+'-skip'"
+                      :name="'settings['+type+'][method]'"
+                      value="skip"
+                      v-model="model[type].method"
+                    />
+                    <label :for="'settings-'+type+'-skip'">Skip {{type}}</label>
+                  </div>
+                </fieldset>
+              </div>
+              <hr v-if="i < types.length-1" />
             </div>
           </div>
         `,
