@@ -1,11 +1,14 @@
-import Vuex from "vuex";
 import Vue from "vue";
-import Api from "../api";
+import Vuex from "vuex";
+import VueFormulate from "@braid/vue-formulate";
 
+import Api from "../api";
 import * as MUTATIONS from "../constants/mutation-types";
 import * as SETTINGS from "../constants/settings-types";
 
+// Init Vue libs
 Vue.use(Vuex);
+Vue.use(VueFormulate);
 
 /**
  * Defines the default variant configuration settings
@@ -327,6 +330,21 @@ export default new Vuex.Store({
       });
       return values;
     },
+
+    /**
+     * Returns all variant configuration field type raw value objecst, keyed by field handle
+     * @author Josh Smith <josh@batch.nz>
+     * @param  object state
+     * @return object
+     */
+    fieldValuesRawByHandle(state) {
+      const values = {};
+      state.variantConfigurationTypeFields.forEach((field) => {
+        values[field.handle] = field.values.map((value) => value);
+      });
+      return values;
+    },
+
     defaultSettings() {
       return defaultSettings;
     },

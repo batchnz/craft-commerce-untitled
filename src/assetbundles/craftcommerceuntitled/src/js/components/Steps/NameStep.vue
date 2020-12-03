@@ -1,30 +1,19 @@
 <template>
   <div class="field width-100">
-    <div class="heading">
-      <label for="configuration-name">Name</label>
-    </div>
-    <div id="configuration-name-instructions" class="instructions">
-      <p>Give your configuration a name e.g. "Accent Colours"</p>
-    </div>
-    <div class="input ltr">
-      <textarea
-        @input="setTitle($event.target.value)"
-        id="configuration-name"
-        class="nicetext text"
-        name="title"
-        rows="1"
-        cols="50"
-        placeholder=""
-        style="min-height: 32px"
-        >{{ title }}</textarea
-      >
-    </div>
+    <BaseTextarea
+      label="Name"
+      instructions='Give your configuration a name e.g. "Accent Colours"'
+      @input="setTitle($event)"
+      :value="title"
+    />
   </div>
 </template>
 
 <script>
 import { mapState, mapMutations } from "vuex";
+import BaseTextarea from "../BaseTextarea";
 export default {
+  components: { BaseTextarea },
   computed: mapState({
     title: (state) => state.variantConfiguration.title,
   }),

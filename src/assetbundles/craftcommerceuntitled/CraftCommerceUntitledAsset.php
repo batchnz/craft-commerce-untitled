@@ -74,6 +74,7 @@ class CraftCommerceUntitledAsset extends AssetBundle
 
         $this->css = [
             'libs/DataTables/datatables.min.css',
+            'css/CraftCommerceUntitled.css'
         ];
 
         parent::init();

@@ -16,19 +16,24 @@
       </div>
       <div class="input ltr">
         <fieldset class="checkbox-group" style="display: flex; flex-wrap: wrap">
-          <div v-for="{ label, value } in field.values" style="width: 25%">
+          <BaseCheckbox
+            name="values[]"
+            v-model="values"
+            :options="getCheckboxOptions(field.handle)"
+          />
+          <!-- <div v-for="{ label, value } in field.values" style="width: 25%">
             <input
               type="checkbox"
-              :id="'fields-' + value"
+              :id="'values-' + value"
               class="checkbox"
-              name="fields[]"
+              name="values[]"
               :value="value"
               v-model="values"
             />
-            <label :for="'fields-' + value">
+            <label :for="'values-' + value">
               {{ label }}
             </label>
-          </div>
+          </div> -->
         </fieldset>
       </div>
     </div>
@@ -37,8 +42,10 @@
 
 <script>
 import { mapActions, mapMutations, mapState, mapGetters } from "vuex";
+import BaseCheckbox from "../BaseCheckbox";
 
 export default {
+  components: { BaseCheckbox },
   computed: {
     ...mapState({
       fields: (state) => state.variantConfigurationTypeFields,
@@ -48,6 +55,7 @@ export default {
     ...mapGetters({
       selectedFields: "selectedFields",
       isAllSelected: "isAllValuesSelected",
+      fieldValuesRawByHandle: "fieldValuesRawByHandle",
     }),
     values: {
       get() {
@@ -63,6 +71,21 @@ export default {
     ...mapMutations({
       setValues: "SET_VARIANT_CONFIGURATION_VALUES",
     }),
+    /**
+     * Returns checkbox option values for the field handle
+     * @author Josh Smith <josh@batch.nz>
+     * @param  string fieldHandle
+     * @return array
+     */
+    getCheckboxOptions(fieldHandle) {
+      const values = this.fieldValuesRawByHandle[fieldHandle] || [];
+
+      return values.map(({ label, value }) => ({
+        label,
+        value,
+        id: "values-" + value,
+      }));
+    },
   },
 };
 </script>

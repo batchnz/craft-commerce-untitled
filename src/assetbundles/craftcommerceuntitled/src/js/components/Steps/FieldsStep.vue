@@ -13,19 +13,12 @@
     </div>
     <div class="input ltr">
       <fieldset class="checkbox-group">
-        <div v-for="field in fields">
-          <input
-            type="checkbox"
-            class="checkbox"
-            name="fields[]"
-            :id="'fields-' + field.handle"
-            :value="field.handle"
-            v-model="variantFields"
-          />
-          <label :for="'fields-' + field.handle">
-            {{ field.name }}
-          </label>
-        </div>
+        <BaseCheckbox
+          class="input-list"
+          name="fields[]"
+          v-model="variantFields"
+          :options="variantFieldCheckboxes"
+        />
       </fieldset>
     </div>
   </div>
@@ -33,8 +26,10 @@
 
 <script>
 import { mapState, mapMutations, mapGetters, mapActions } from "vuex";
+import BaseCheckbox from "../BaseCheckbox";
 
 export default {
+  components: { BaseCheckbox },
   computed: {
     ...mapState({
       fields: (state) => state.variantConfigurationTypeFields,
@@ -47,6 +42,13 @@ export default {
       set(val) {
         this.setVariantConfigurationFields(val);
       },
+    },
+    variantFieldCheckboxes() {
+      return this.fields.map((field) => ({
+        label: field.name,
+        value: field.handle,
+        id: "fields-" + field.handle,
+      }));
     },
   },
   methods: {
