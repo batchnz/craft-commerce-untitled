@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-for="(type, i) in types" class="field width-100">
+    <div v-for="(type, i) in types">
       <AppSettings :type="type" />
       <hr v-if="i < types.length - 1" />
     </div>

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="field">
     <div class="heading">
       <label>{{ settingsTitle }}</label>
     </div>
@@ -17,6 +17,21 @@
           <label :for="'settings-' + type + '-all'"
             >Set {{ type }} for all variants</label
           >
+        </div>
+
+        <!-- Set all values per field -->
+        <div v-if="method === 'all'" class="field" style="margin-left: 32px">
+          <div class="heading">
+            <label>{{ settingsTitle }}</label>
+          </div>
+          <div class="input ltr">
+            <input
+              type="text"
+              class="nicetext text"
+              @input="setFieldValue('value', $event.target.value)"
+              :value="values['value']"
+            />
+          </div>
         </div>
 
         <div>
@@ -41,7 +56,11 @@
           <div class="input ltr">
             <select name="" id="" v-model="field">
               <option :value="null">Select</option>
-              <option v-for="field in selectedFields" :value="field.handle">
+              <option
+                v-for="field in selectedFields"
+                v-if="selectedValuesByHandle[field.handle].length"
+                :value="field.handle"
+              >
                 {{ field.name }}
               </option>
             </select>
@@ -57,6 +76,7 @@
             <div class="input ltr">
               <input
                 type="text"
+                class="nicetext text"
                 @input="setFieldValue(value, $event.target.value)"
                 :value="values[value]"
               />

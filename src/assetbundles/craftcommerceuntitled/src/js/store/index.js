@@ -63,8 +63,8 @@ export default new Vuex.Store({
       state.variantConfiguration.settings = payload;
     },
     [MUTATIONS.SET_VARIANT_CONFIGURATION_SETTINGS_TYPE](state, { type, data }) {
-      if (!state.variantConfiguration[type]) {
-        state.variantConfiguration[type] = {};
+      if (!state.variantConfiguration.settings[type]) {
+        state.variantConfiguration.settings[type] = {};
       }
 
       state.variantConfiguration.settings = {

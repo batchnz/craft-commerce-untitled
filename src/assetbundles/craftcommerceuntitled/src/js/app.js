@@ -90,9 +90,18 @@ import App from "./components/App.vue";
       // Append the root element
       this.$container = $(
         `<div class="modal elementselectormodal">
-          <div id="variant-configuration-app" />
+          <div id="variant-configuration-modal-container" style="overflow-y: scroll;">
+            <div id="variant-configuration-app" />
+          </div>
         </div>`
       ).appendTo(Garnish.$bod);
+
+      const modalBodyHeight =
+        parseInt(this.$container.css("height")) -
+        parseInt(this.$container.css("padding-bottom"));
+      this.$container
+        .find("#variant-configuration-modal-container")
+        .css({ height: `${modalBodyHeight}px` });
 
       new Vue({
         el: "#variant-configuration-app",
