@@ -53,8 +53,6 @@ export default {
     return {
       step: 0,
       totalSteps: 5,
-      variantConfigurations: [],
-      variantConfigurationTypeFields: [],
       state: {},
       defaults: {
         header: {
@@ -65,13 +63,6 @@ export default {
           priBtnText: "Next Step",
           secBtnText: "Previous",
         },
-      },
-      variantConfiguration: {
-        id: null,
-        title: "",
-        fields: [],
-        values: [],
-        settings: {},
       },
     };
   },

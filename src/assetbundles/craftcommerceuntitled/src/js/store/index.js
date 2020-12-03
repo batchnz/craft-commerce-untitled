@@ -2,7 +2,16 @@ import Vuex from "vuex";
 import Vue from "vue";
 import Api from "../api";
 
+import * as MUTATIONS from "../constants/mutation-types";
+import * as SETTINGS from "../constants/settings-types";
+
 Vue.use(Vuex);
+
+const defaultSettings = {
+  [SETTINGS.METHOD]: null,
+  [SETTINGS.FIELD]: null,
+  [SETTINGS.VALUES]: {},
+};
 
 export default new Vuex.Store({
   state: {
@@ -23,32 +32,50 @@ export default new Vuex.Store({
     variantConfigurationTypeFields: [],
   },
   mutations: {
-    SET_VARIANT_CONFIGURATIONS(state, payload) {
+    [MUTATIONS.SET_VARIANT_CONFIGURATIONS](state, payload) {
       state.variantConfigurations = payload;
     },
-    SET_VARIANT_CONFIGURATION_TYPE_FIELDS(state, payload) {
+    [MUTATIONS.SET_VARIANT_CONFIGURATION_TYPE_FIELDS](state, payload) {
       state.variantConfigurationTypeFields = payload;
     },
-    SET_IS_LOADING(state, payload) {
+    [MUTATIONS.SET_IS_LOADING](state, payload) {
       state.ui.isLoading = payload;
     },
-    SET_VARIANT_CONFIGURATION(state, payload) {
+    [MUTATIONS.SET_VARIANT_CONFIGURATION](state, payload) {
       state.variantConfiguration = payload;
     },
-    UPDATE_VARIANT_CONFIGURATION(state, payload) {
+    [MUTATIONS.UPDATE_VARIANT_CONFIGURATION](state, payload) {
       state.variantConfigurations = {
         ...state.variantConfigurations,
         ...payload,
       };
     },
-    SET_VARIANT_CONFIGURATION_TITLE(state, payload) {
+    [MUTATIONS.SET_VARIANT_CONFIGURATION_TITLE](state, payload) {
       state.variantConfiguration.title = payload;
     },
-    SET_VARIANT_CONFIGURATION_FIELDS(state, payload) {
+    [MUTATIONS.SET_VARIANT_CONFIGURATION_FIELDS](state, payload) {
       state.variantConfiguration.fields = payload;
     },
-    SET_VARIANT_CONFIGURATION_VALUES(state, payload) {
+    [MUTATIONS.SET_VARIANT_CONFIGURATION_VALUES](state, payload) {
       state.variantConfiguration.values = payload;
+    },
+    [MUTATIONS.SET_VARIANT_CONFIGURATION_SETTINGS](state, payload) {
+      state.variantConfiguration.settings = payload;
+    },
+    [MUTATIONS.SET_VARIANT_CONFIGURATION_SETTINGS_TYPE](state, { type, data }) {
+      if (!state.variantConfiguration[type]) {
+        state.variantConfiguration[type] = {};
+      }
+
+      state.variantConfiguration.settings = {
+        ...state.variantConfiguration.settings,
+        ...{
+          [type]: {
+            ...state.variantConfiguration.settings[type],
+            ...{ ...defaultSettings, ...data },
+          },
+        },
+      };
     },
   },
   actions: {
@@ -60,7 +87,7 @@ export default new Vuex.Store({
     async fetchVariantConfigurations({ commit }, params) {
       const response = await Api.getVariantConfigurations(params);
       const { data: variantConfigurations } = await response.json();
-      commit("SET_VARIANT_CONFIGURATIONS", variantConfigurations);
+      commit(MUTATIONS.SET_VARIANT_CONFIGURATIONS, variantConfigurations);
     },
 
     /**
@@ -72,7 +99,7 @@ export default new Vuex.Store({
       const response = await Api.getVariantConfigurationTypeFields(params);
       const { data: variantConfigurationTypeFields } = await response.json();
       commit(
-        "SET_VARIANT_CONFIGURATION_TYPE_FIELDS",
+        MUTATIONS.SET_VARIANT_CONFIGURATION_TYPE_FIELDS,
         variantConfigurationTypeFields
       );
     },
@@ -84,7 +111,7 @@ export default new Vuex.Store({
      */
     async toggleAllSelectedFields({ commit, getters, state }) {
       if (getters.isAllFieldsSelected) {
-        return commit("SET_VARIANT_CONFIGURATION_FIELDS", []);
+        return commit(MUTATIONS.SET_VARIANT_CONFIGURATION_FIELDS, []);
       }
 
       const variantFields = [];
@@ -92,7 +119,7 @@ export default new Vuex.Store({
         variantFields.push(field.handle);
       });
 
-      commit("SET_VARIANT_CONFIGURATION_FIELDS", variantFields);
+      commit(MUTATIONS.SET_VARIANT_CONFIGURATION_FIELDS, variantFields);
     },
 
     /**
@@ -115,7 +142,7 @@ export default new Vuex.Store({
         );
       }
 
-      commit("SET_VARIANT_CONFIGURATION_VALUES", variantValues);
+      commit(MUTATIONS.SET_VARIANT_CONFIGURATION_VALUES, variantValues);
     },
   },
   getters: {
@@ -145,12 +172,30 @@ export default new Vuex.Store({
         state.variantConfiguration.fields.includes(field.handle)
       );
     },
+    selectedFieldValuesByHandle(state, getters) {
+      const values = {};
+
+      // Loop the fields and determine the available values
+      getters.selectedFields.forEach((field) => {
+        values[field.handle] = [];
+        field.values.forEach((fieldVal) => {
+          if (state.variantConfiguration.values.includes(fieldVal.value)) {
+            values[field.handle].push(fieldVal);
+          }
+        });
+      });
+
+      return values;
+    },
     fieldValuesByHandle(state) {
       const values = {};
       state.variantConfigurationTypeFields.forEach((field) => {
         values[field.handle] = field.values.map(({ value }) => value);
       });
       return values;
+    },
+    defaultSettings() {
+      return defaultSettings;
     },
   },
 });
