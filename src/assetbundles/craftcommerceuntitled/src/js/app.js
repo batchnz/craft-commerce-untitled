@@ -11,6 +11,7 @@
  */
 
 import Vue from "vue";
+import store from "./store";
 import App from "./components/App.vue";
 
 (function ($) {
@@ -67,22 +68,6 @@ import App from "./components/App.vue";
   });
 
   /**
-   * Static method that returns an API url
-   * @author Josh Smith <josh@batch.nz>
-   * @param  string slug
-   * @return string
-   */
-  Craft.CommerceUntitled.getApiUrl = (slug = "", params = {}) => {
-    // Build query string params
-    const qs = new URLSearchParams(params).toString();
-
-    // Assemble the api url with query string params
-    return `${Craft.getSiteUrl() + Craft.CommerceUntitled.pluginHandle}/api/${
-      Craft.CommerceUntitled.apiVersion
-    }/${slug + (qs.length > 0 ? `?${qs}` : ``)}`;
-  };
-
-  /**
    * Variant Configuration Modal Object
    * @type Garnish.Modal
    */
@@ -111,6 +96,7 @@ import App from "./components/App.vue";
 
       new Vue({
         el: "#variant-configuration-app",
+        store,
         render: (h) =>
           h(App, {
             props: {

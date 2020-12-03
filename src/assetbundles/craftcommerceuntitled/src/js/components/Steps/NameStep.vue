@@ -8,7 +8,7 @@
     </div>
     <div class="input ltr">
       <textarea
-        @input="$emit('input', $event.target.value)"
+        @input="setTitle($event.target.value)"
         id="configuration-name"
         class="nicetext text"
         name="title"
@@ -16,16 +16,20 @@
         cols="50"
         placeholder=""
         style="min-height: 32px"
-        >{{ value }}</textarea
+        >{{ title }}</textarea
       >
     </div>
   </div>
 </template>
 
 <script>
+import { mapState, mapMutations } from "vuex";
 export default {
-  props: {
-    value: String,
-  },
+  computed: mapState({
+    title: (state) => state.variantConfiguration.title,
+  }),
+  methods: mapMutations({
+    setTitle: "SET_VARIANT_CONFIGURATION_TITLE",
+  }),
 };
 </script>

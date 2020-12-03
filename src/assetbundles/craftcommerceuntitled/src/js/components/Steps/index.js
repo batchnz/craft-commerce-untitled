@@ -1,5 +1,5 @@
-export { default as IndexStep } from "./Index.vue";
-export { default as NameStep } from "./Name.vue";
-export { default as FieldsStep } from "./Fields.vue";
-export { default as ValuesStep } from "./Values.vue";
-export { default as SettingsStep } from "./Settings.vue";
+export { default as IndexStep } from "./IndexStep.vue";
+export { default as NameStep } from "./NameStep.vue";
+export { default as FieldsStep } from "./FieldsStep.vue";
+export { default as ValuesStep } from "./ValuesStep.vue";
+export { default as SettingsStep } from "./SettingsStep.vue";

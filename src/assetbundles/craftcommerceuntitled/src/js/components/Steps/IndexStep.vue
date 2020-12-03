@@ -14,38 +14,33 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
   data() {
     return {
       dt: null,
     };
   },
+  computed: mapState({
+    variantConfigurations: (state) => state.variantConfigurations,
+    dtData() {
+      const data = [];
+      this.variantConfigurations.forEach((config) => {
+        const dateUpdated =
+          config.dateUpdated == null
+            ? null
+            : new Date(config.dateUpdated).toLocaleDateString();
+        data.push([config.title, config.numberOfVariants, dateUpdated]);
+      });
+      return data;
+    },
+  }),
   mounted() {
     this.dt = $(this.$refs.table).DataTable({ data: this.dtData });
   },
   beforeDestroy() {
     this.dt.destroy();
-  },
-  props: {
-    configs: {
-      type: Array,
-      default() {
-        return [];
-      },
-    },
-  },
-  computed: {
-    dtData() {
-      const data = [];
-      this.configs.forEach((vc) => {
-        const dateUpdated =
-          vc.dateUpdated == null
-            ? null
-            : new Date(vc.dateUpdated).toLocaleDateString();
-        data.push([vc.title, vc.numberOfVariants, dateUpdated]);
-      });
-      return data;
-    },
   },
 };
 </script>

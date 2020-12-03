@@ -4,7 +4,7 @@
       <label for="configuration-fields"
         >Fields
         <a
-          @click="toggleSelectAll"
+          @click="toggleAllSelectedFields"
           href="#"
           style="font-size: 11px; font-weight: normal; margin-left: 2px"
           >{{ isAllSelected ? "Unselect all" : "Select all" }}</a
@@ -20,7 +20,7 @@
             name="fields[]"
             :id="'fields-' + field.handle"
             :value="field.handle"
-            v-model="model"
+            v-model="variantFields"
           />
           <label :for="'fields-' + field.handle">
             {{ field.name }}
@@ -32,42 +32,28 @@
 </template>
 
 <script>
+import { mapState, mapMutations, mapGetters, mapActions } from "vuex";
+
 export default {
-  props: {
-    fields: Array,
-    value: Array,
-  },
-  data() {
-    return {
-      model: this.value,
-    };
+  computed: {
+    ...mapState({
+      fields: (state) => state.variantConfigurationTypeFields,
+    }),
+    ...mapGetters({ isAllSelected: "isAllFieldsSelected" }),
+    variantFields: {
+      get() {
+        return this.$store.state.variantConfiguration.fields;
+      },
+      set(val) {
+        this.setVariantConfigurationFields(val);
+      },
+    },
   },
   methods: {
-    toggleSelectAll() {
-      if (this.isAllSelected) {
-        return (this.model = []);
-      }
-
-      this.model = [];
-      this.fields.forEach((field) => {
-        this.model.push(field.handle);
-      });
-    },
-  },
-  computed: {
-    isAllSelected() {
-      const handles = this.fields.map((field) => field.handle);
-      const filteredArray = handles.filter((value) =>
-        this.model.includes(value)
-      );
-
-      return filteredArray.length === handles.length;
-    },
-  },
-  watch: {
-    model: function (val) {
-      this.$emit("input", val);
-    },
+    ...mapMutations({
+      setVariantConfigurationFields: "SET_VARIANT_CONFIGURATION_FIELDS",
+    }),
+    ...mapActions(["toggleAllSelectedFields"]),
   },
 };
 </script>
