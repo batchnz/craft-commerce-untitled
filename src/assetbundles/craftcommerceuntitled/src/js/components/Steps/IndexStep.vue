@@ -16,6 +16,7 @@
 
 <script>
 import { mapActions, mapState } from "vuex";
+import AsyncEventBus from "../../store/asyncEventBus";
 
 export default {
   data() {
@@ -42,31 +43,43 @@ export default {
       return data;
     },
   }),
+  created() {
+    AsyncEventBus.once("form-submission", this.createNewVariantConfiguration);
+  },
   mounted() {
-    this.dt = $(this.$refs.table).DataTable({
-      data: this.dtData,
-      columnDefs: [
-        {
-          targets: [0],
-          visible: false,
-          searchable: false,
-        },
-      ],
-    });
-
     const self = this;
+
     this.$nextTick(() => {
+      // Initialise the datatable
+      this.dt = $(this.$refs.table).DataTable({
+        data: this.dtData,
+        columnDefs: [
+          {
+            targets: [0],
+            visible: false,
+            searchable: false,
+          },
+        ],
+      });
+
+      // Add a click event handler on the datatable
       $(".dataTable").on("click", "tbody tr", function () {
         const data = self.dt.row(this).data();
+        self.clearFormErrors();
         self.setCurrentVariantConfigurationById(data[0]);
       });
     });
   },
   methods: {
-    ...mapActions(["setCurrentVariantConfigurationById"]),
+    ...mapActions([
+      "setCurrentVariantConfigurationById",
+      "createNewVariantConfiguration",
+      "clearFormErrors",
+    ]),
   },
   beforeDestroy() {
     this.dt.destroy();
+    AsyncEventBus.off("form-submission", this.createNewVariantConfiguration);
   },
 };
 </script>

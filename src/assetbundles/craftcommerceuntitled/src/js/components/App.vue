@@ -12,8 +12,11 @@
     </div>
     <AppFooter
       :isLoading="isLoading"
+      :isSubmitting="isSubmitting"
+      :isCompleted="isCompleted"
       :priBtnText="state.footer.priBtnText"
       :secBtnText="state.footer.secBtnText"
+      :step="step"
     />
   </div>
 </template>
@@ -43,6 +46,9 @@ export default {
   computed: {
     ...mapState({
       isLoading: (state) => state.ui.isLoading,
+      isSubmitting: (state) => state.ui.isSubmitting,
+      isCompleted: (state) => state.ui.isCompleted,
+      step: (state) => state.step,
     }),
     ...mapGetters({
       state: "currentStepState",

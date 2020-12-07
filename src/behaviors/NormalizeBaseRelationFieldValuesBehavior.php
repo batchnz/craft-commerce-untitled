@@ -44,7 +44,7 @@ class NormalizeBaseRelationFieldValuesBehavior extends NormalizeBaseFieldValuesB
         foreach ($elementQuery->all() as $element) {
             $elements[] = [
                 'label' => $element->title,
-                'value' => $element->id,
+                'value' => (string) $element->id,
             ];
         }
 

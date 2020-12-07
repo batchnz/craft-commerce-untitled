@@ -10,17 +10,13 @@
 <script>
 import Vue from "vue";
 import { mapActions } from "vuex";
-import eventBus from "../../store/eventBus";
+import AsyncEventBus from "../../store/asyncEventBus";
 import AppSettings from "../AppSettings";
 import { TYPES } from "../../constants/settingsTypes";
 
 export default {
   created() {
-    eventBus.on("form-submission", (cb) => {
-      cb(async () => {
-        return await this.saveVariantConfiguration();
-      });
-    });
+    AsyncEventBus.once("form-submission", this.saveVariantConfiguration);
   },
   computed: {
     types() {
@@ -29,6 +25,9 @@ export default {
   },
   methods: {
     ...mapActions(["saveVariantConfiguration"]),
+  },
+  beforeDestroy() {
+    AsyncEventBus.off("form-submission", this.saveVariantConfiguration);
   },
   components: {
     AppSettings,

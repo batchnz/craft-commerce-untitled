@@ -17,7 +17,7 @@ const defaults = {
     priBtnText: "Next Step",
     secBtnText: "Previous",
   },
-  rules: object().shape({}),
+  rules: object({}),
 };
 
 export const indexStep = {
@@ -123,22 +123,23 @@ const getLazySettingsFieldRules = (type) => {
   const settings = store.getters.settingsByType(type);
   if (settings.field == null) return object(rules);
 
-  const fieldValuesByHandle = store.getters.fieldValuesByHandle[settings.field];
-  if (fieldValuesByHandle == null) return object(rules);
+  const optionValues =
+    store.getters.selectedOptionValuesByFieldHandle[settings.field];
+  if (optionValues == null) return object(rules);
 
   // Loop each field Id and generate schema rules
-  fieldValuesByHandle.forEach((fieldId) => {
+  optionValues.forEach((value) => {
     switch (type) {
       case "price":
       case "stock":
       default:
-        rules[fieldId] = number()
+        rules[value] = number()
           .typeError("Please enter a number")
           .required("Please enter a value")
           .min(0, "Please enter a value greater than 0");
         break;
       case "sku":
-        rules[fieldId] = string()
+        rules[value] = string()
           .typeError("Please enter a value")
           .required("Please enter a value")
           .nullable();
@@ -174,6 +175,7 @@ export const generateStep = {
     ...defaults.footer,
     priBtnText: "Generate Variants",
   },
+  rules: defaults.rules,
 };
 
 export default {

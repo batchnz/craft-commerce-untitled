@@ -32,7 +32,7 @@ class VariantConfiguration
             $request = Craft::$app->getRequest();
         }
 
-        $variantConfigurationId = $request->getBodyParam('variantConfigurationId');
+        $variantConfigurationId = $request->getBodyParam('id');
         $siteId = $request->getBodyParam('siteId');
 
         if ($variantConfigurationId) {

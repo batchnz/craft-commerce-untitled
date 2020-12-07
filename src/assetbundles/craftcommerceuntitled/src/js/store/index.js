@@ -3,7 +3,7 @@ import Vue from "vue";
 
 import Api from "../api";
 import State from "./stepState";
-import eventBus from "./eventBus";
+import AsyncEventBus from "./asyncEventBus";
 
 import * as MUTATIONS from "../constants/mutationTypes";
 import * as SETTINGS from "../constants/settingsTypes";
@@ -21,12 +21,57 @@ const defaultSettings = {
   [SETTINGS.VALUES]: {},
 };
 
-const setSettingsDefaults = () => {
+/**
+ * Returns the default settings object for the store
+ * @author Josh Smith <josh@batch.nz>
+ * @return object
+ */
+const getSettingsDefaults = () => {
   const settings = {};
   SETTINGS.TYPES.forEach((type) => {
     settings[type] = { ...defaultSettings };
   });
   return settings;
+};
+
+/**
+ * Retunrs a new variant configuration object
+ * @author Josh Smith <josh@batch.nz>
+ * @return object
+ */
+const getNewVariantConfiguration = () => {
+  return {
+    id: null,
+    title: "",
+    fields: [],
+    values: [],
+    settings: getSettingsDefaults(),
+  };
+};
+
+/**
+ * Transforms variant configurations API
+ * response into a format suitable for the store.
+ *
+ * Mutates the variant configurations by reference
+ *
+ * @author Josh Smith <josh@batch.nz>
+ * @param  {Array} response An array of response data
+ * @return void
+ */
+const transformResponse = (response = []) => {
+  if (!Array.isArray(response)) {
+    response = [response];
+  }
+
+  response.forEach((vc) => {
+    // Flatten the values from a key-pair object to an array
+    let values = [];
+    for (const [key, value] of Object.entries(vc.values)) {
+      values = values.concat(vc.values[key]);
+    }
+    vc.values = values;
+  });
 };
 
 /**
@@ -37,28 +82,16 @@ export default new Vuex.Store({
   state: {
     ui: {
       isLoading: false,
+      isSubmitting: false,
+      isCompleted: false,
     },
-    step: 5,
+    step: 0,
     totalSteps: 5,
     formErrors: {},
     productId: null,
     productTypeId: null,
     typeId: null,
-    variantConfiguration: {
-      id: null,
-      title: "Enamel Paint",
-      fields: ["paintSheen"],
-      values: [4248, 5124, 5125],
-      settings: {
-        price: {
-          method: "field",
-          field: "paintSheen",
-          values: { 4248: "22", 5124: "46", 5125: "92" },
-        },
-        stock: { method: "all", field: "paintSheen", values: { value: "99" } },
-        sku: { method: "skip", field: null, values: {} },
-      },
-    },
+    variantConfiguration: getNewVariantConfiguration(),
     variantConfigurations: [],
     variantConfigurationTypeFields: [],
   },
@@ -108,6 +141,21 @@ export default new Vuex.Store({
     },
 
     /**
+     * Sets a variant configuration object
+     * @author Josh Smith <josh@batch.nz>
+     * @since  1.0.0
+     * @param object state
+     * @param object payload
+     */
+    [MUTATIONS.UPDATE_VARIANT_CONFIGURATIONS](state, payload) {
+      state.variantConfigurations.forEach((vc, i) => {
+        if (vc.id === payload.id) {
+          state.variantConfigurations[i] = { ...vc, ...payload };
+        }
+      });
+    },
+
+    /**
      * sets the variant configuration type fields data
      * @author Josh Smith <josh@batch.nz>
      * @since  1.0.0
@@ -125,8 +173,30 @@ export default new Vuex.Store({
      * @param object state
      * @param object payload
      */
-    [MUTATIONS.SET_IS_LOADING](state, payload) {
+    [MUTATIONS.SET_IS_LOADING](state, payload = true) {
       state.ui.isLoading = payload;
+    },
+
+    /**
+     * Sets the UI submitting state
+     * @author Josh Smith <josh@batch.nz>
+     * @since  1.0.0
+     * @param object state
+     * @param object payload
+     */
+    [MUTATIONS.SET_IS_SUBMITTING](state, payload = true) {
+      state.ui.isSubmitting = payload;
+    },
+
+    /**
+     * Sets the UI completed state
+     * @author Josh Smith <josh@batch.nz>
+     * @since  1.0.0
+     * @param object state
+     * @param object payload
+     */
+    [MUTATIONS.SET_IS_COMPLETED](state, payload = true) {
+      state.ui.isCompleted = payload;
     },
 
     /**
@@ -141,15 +211,15 @@ export default new Vuex.Store({
     },
 
     /**
-     * Sets variant configurations
+     * Updates a variant configuration
      * @author Josh Smith <josh@batch.nz>
      * @since  1.0.0
      * @param object state
      * @param object payload
      */
     [MUTATIONS.UPDATE_VARIANT_CONFIGURATION](state, payload) {
-      state.variantConfigurations = {
-        ...state.variantConfigurations,
+      state.variantConfiguration = {
+        ...state.variantConfiguration,
         ...payload,
       };
     },
@@ -250,14 +320,46 @@ export default new Vuex.Store({
      * @author Josh Smith <josh@batch.nz>
      * @return void
      */
-    async saveVariantConfiguration({ commit, state, getters }) {
+    async saveVariantConfiguration({ commit, state, getters, dispatch }) {
+      commit(MUTATIONS.SET_IS_SUBMITTING, true);
+
+      // Transform the fields/values for the API request
+      const values = {};
+      const fields = Object.keys(getters.fieldValuesByHandle);
+
+      fields.forEach((fieldHandle) => {
+        values[fieldHandle] =
+          getters.selectedOptionValuesByFieldHandle[fieldHandle] || [];
+      });
+
       const response = await Api.saveVariantConfiguration({
         ...state.variantConfiguration,
-        ...{ values: getters.selectedOptionValuesByFieldHandle },
-        ...{ productId: state.productId, typeId: state.typeId },
+        ...{
+          values,
+          productId: state.productId,
+          typeId: state.typeId,
+        },
       });
       const { data: variantConfiguration } = await response.json();
-      console.log("variantConfiguration:", variantConfiguration);
+
+      // Transform the response into a format suitable for the store
+      transformResponse(variantConfiguration);
+
+      // Save and replace the saved variant configuration into the store
+      commit(MUTATIONS.SET_VARIANT_CONFIGURATION, variantConfiguration);
+      commit(MUTATIONS.UPDATE_VARIANT_CONFIGURATIONS, variantConfiguration);
+
+      commit(MUTATIONS.SET_IS_SUBMITTING, false);
+    },
+
+    /**
+     * Generates variants for the passed config ID
+     * @author Josh Smith <josh@batch.nz>
+     * @param  integer variantConfigurationId
+     * @return void
+     */
+    async generateVariants({ commit }, variantConfigurationId) {
+      const response = await Api.generateVariants(variantConfigurationId);
     },
 
     /**
@@ -290,6 +392,10 @@ export default new Vuex.Store({
     async fetchVariantConfigurations({ commit }, params) {
       const response = await Api.getVariantConfigurations(params);
       const { data: variantConfigurations } = await response.json();
+
+      // Transform the response into a format suitable for the store
+      transformResponse(variantConfigurations);
+
       commit(MUTATIONS.SET_VARIANT_CONFIGURATIONS, variantConfigurations);
     },
 
@@ -364,31 +470,44 @@ export default new Vuex.Store({
       if (!valid) return;
 
       // Emit an event so that components can hook into the submission
-      eventBus.emit("form-submission", null, async (cb) => {
-        if (typeof cb === "function") {
-          const result = await cb();
-          if (result === false) return;
-        }
+      const result = await AsyncEventBus.emit("form-submission");
+      if (result === false) return;
 
-        if (state.step >= state.totalSteps) {
-          return;
-        }
-        commit(MUTATIONS.SET_STEP, state.step + 1);
-      });
+      if (state.step >= state.totalSteps) {
+        return;
+      }
+      commit(MUTATIONS.SET_STEP, state.step + 1);
     },
 
-    /** Navigate to the next step
+    /**
+     * Navigate to the next step
      * @author Josh Smith <josh@batch.nz>
      * @param  int  step
      * @return void
      */
-    async prevStep({ commit, getters, state }) {
+    async prevStep({ commit, state }) {
       if (state.step < 0) {
         return;
       }
       commit(MUTATIONS.SET_STEP, state.step - 1);
     },
 
+    /**
+     * Navigate to the menu step
+     * @author Josh Smith <josh@batch.nz>
+     * @param  int  step
+     * @return void
+     */
+    async menuStep({ commit }) {
+      commit(MUTATIONS.SET_IS_COMPLETED, false);
+      commit(MUTATIONS.SET_STEP, 0);
+    },
+
+    /**
+     * Validates the current form step
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
     async validate({ commit, getters, state }, { schema, values }) {
       try {
         commit(MUTATIONS.SET_FORM_ERRORS, {});
@@ -407,6 +526,20 @@ export default new Vuex.Store({
       }
 
       return true;
+    },
+
+    async createNewVariantConfiguration({ commit, dispatch }) {
+      await dispatch("clearFormErrors");
+      commit(MUTATIONS.SET_VARIANT_CONFIGURATION, getNewVariantConfiguration());
+    },
+
+    /**
+     * Clears the form errors
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
+    async clearFormErrors({ commit }) {
+      commit(MUTATIONS.SET_FORM_ERRORS, {});
     },
   },
   getters: {
@@ -483,9 +616,9 @@ export default new Vuex.Store({
       // Loop the fields and determine the available values
       getters.selectedFields.forEach((field) => {
         values[field.handle] = [];
-        field.values.forEach((fieldVal) => {
-          if (state.variantConfiguration.values.includes(fieldVal.value)) {
-            values[field.handle].push(fieldVal);
+        field.values.forEach((option) => {
+          if (state.variantConfiguration.values.includes(option.value)) {
+            values[field.handle].push(option);
           }
         });
       });
@@ -532,14 +665,17 @@ export default new Vuex.Store({
      */
     selectedOptionValuesByFieldHandle(state, getters) {
       const values = {};
+
+      // Loop the fields and determine the available values
       getters.selectedFields.forEach((field) => {
+        values[field.handle] = [];
         field.values.forEach((option) => {
-          if (!Array.isArray(values[field.handle])) {
-            values[field.handle] = [];
+          if (state.variantConfiguration.values.includes(option.value)) {
+            values[field.handle].push(option.value);
           }
-          values[field.handle].push(option.value);
         });
       });
+
       return values;
     },
 

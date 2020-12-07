@@ -415,7 +415,7 @@ class VariantConfiguration extends Element
             $values = [];
             foreach ($this->fieldLayoutFields() as $field) {
                 $value = $this->getFieldValue($field->handle);
-                $values = array_merge($values, $field->serializeValue($value, $this));
+                $values[$field->handle] = $field->serializeValue($value, $this);
             }
             return $values;
         };

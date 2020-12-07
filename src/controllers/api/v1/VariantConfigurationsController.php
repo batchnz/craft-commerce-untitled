@@ -124,7 +124,7 @@ class VariantConfigurationsController extends Controller
 
         // Remove superfluous data
         $this->request->setBodyParams([
-            'variantConfigurationId' => $id,
+            'id' => $id,
             'fields' => $fields
         ]);
 
@@ -156,7 +156,7 @@ class VariantConfigurationsController extends Controller
 
         // Remove superfluous data
         $this->request->setBodyParams([
-            'variantConfigurationId' => $id,
+            'id' => $id,
             'values' => $values
         ]);
 
@@ -187,7 +187,7 @@ class VariantConfigurationsController extends Controller
 
         // Remove superfluous data
         $this->request->setBodyParams([
-            'variantConfigurationId' => $id,
+            'id' => $id,
             'settings' => $settings
         ]);
 
@@ -219,9 +219,16 @@ class VariantConfigurationsController extends Controller
             ])->setStatusCode(422);
         }
 
+        // Fetch it afresh. This resolves an issue with the
+        // field layout not loading data correctly that needs to be investigated
+        // todo: investigate the above
+        $variantConfiguration = Plugin::getInstance()
+            ->getVariantConfigurations()
+            ->getVariantConfigurationById($variantConfiguration->id);
+
         return $this->asJson([
             'result' => 'success',
-            // 'data' => $variantConfiguration
+            'data' => $variantConfiguration
         ]);
     }
 }

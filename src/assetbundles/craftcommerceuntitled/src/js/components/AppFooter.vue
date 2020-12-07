@@ -1,17 +1,28 @@
 <template>
   <div class="footer">
-    <div class="buttons right">
+    <div class="buttons left" v-if="step > 0">
+      <button @click="menuStep" class="btn icon nav">Menu</button>
+    </div>
+    <div v-if="!isCompleted" class="buttons right">
       <button @click="prevStep" class="btn">
         {{ secBtnText }}
       </button>
       <button
         @click="nextStep"
-        :disabled="isLoading"
-        :class="{ disabled: isLoading }"
+        :disabled="isLoading || isSubmitting"
+        :class="{
+          disabled: isLoading,
+          add: isSubmitting,
+          icon: isSubmitting,
+          loading: isSubmitting,
+        }"
         class="btn submit"
       >
         {{ priBtnText }}
       </button>
+    </div>
+    <div v-else class="buttons right">
+      <button @click="closeModal" class="btn submit">Finish</button>
     </div>
   </div>
 </template>
@@ -21,9 +32,15 @@ import { mapActions } from "vuex";
 export default {
   props: {
     isLoading: Boolean,
+    isSubmitting: Boolean,
+    isCompleted: Boolean,
     priBtnText: String,
     secBtnText: String,
+    step: Number,
   },
-  methods: mapActions(["nextStep", "prevStep"]),
+  methods: {
+    ...mapActions(["nextStep", "prevStep", "menuStep"]),
+    closeModal() {},
+  },
 };
 </script>

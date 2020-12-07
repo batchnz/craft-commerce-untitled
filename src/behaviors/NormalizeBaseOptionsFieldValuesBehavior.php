@@ -22,7 +22,7 @@ class NormalizeBaseOptionsFieldValuesBehavior extends NormalizeBaseFieldValuesBe
         foreach ($this->owner->options as $option) {
             $fieldValues[] = [
                 'label' => $option['label'],
-                'value' => $option['value'],
+                'value' => (string) $option['value'],
             ];
         }
 

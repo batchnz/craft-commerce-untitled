@@ -17,6 +17,28 @@ const getVariantConfigurationTypeFields = async (params = {}) => {
 };
 
 /**
+ * Generates variants for the passed configuration ID
+ * @author Josh Smith <josh@batch.nz>
+ * @return Promise
+ */
+const generateVariants = async (variantConfigurationId, data = {}) => {
+  return await fetch(
+    getApiUrl(
+      `variant-configurations/${variantConfigurationId}/variants/generate`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify(data),
+      }
+    )
+  );
+};
+
+/**
  * Saves a variant configuration fields to the API
  * @author Josh Smith <josh@batch.nz>
  * @return Promise
@@ -54,4 +76,5 @@ export default {
   getVariantConfigurations,
   getVariantConfigurationTypeFields,
   saveVariantConfiguration,
+  generateVariants,
 };
