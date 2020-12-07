@@ -25,13 +25,28 @@
             <label>{{ settingsTitle }}</label>
           </div>
           <div class="input ltr">
+            <!-- Prefix with a $ -->
+            <div v-if="type === 'price'" class="flex">
+              <div>$</div>
+              <input
+                type="text"
+                class="nicetext text"
+                @input="setFieldValue('value', $event.target.value)"
+                :value="values['value']"
+              />
+            </div>
+            <!-- Otherwise, just display a plain input -->
             <input
+              v-else
               type="text"
               class="nicetext text"
               @input="setFieldValue('value', $event.target.value)"
               :value="values['value']"
             />
           </div>
+          <ul class="errors" v-if="errors[`settings.${type}.values.value`]">
+            <li>{{ errors[`settings.${type}.values.value`] }}</li>
+          </ul>
         </div>
 
         <div>
@@ -65,6 +80,9 @@
               </option>
             </select>
           </div>
+          <ul class="errors" v-if="errors[`settings.${type}.field`]">
+            <li>{{ errors[`settings.${type}.field`] }}</li>
+          </ul>
           <div
             v-if="field"
             v-for="{ label, value } in selectedValuesByHandle[field]"
@@ -74,13 +92,31 @@
               <label>{{ label }}</label>
             </div>
             <div class="input ltr">
+              <!-- Prefix with a $ -->
+              <div v-if="type === 'price'" class="flex">
+                <div>$</div>
+                <input
+                  type="text"
+                  class="nicetext text"
+                  @input="setFieldValue(value, $event.target.value)"
+                  :value="values[value]"
+                />
+              </div>
+              <!-- Otherwise, just display a plain input -->
               <input
+                v-else
                 type="text"
                 class="nicetext text"
                 @input="setFieldValue(value, $event.target.value)"
                 :value="values[value]"
               />
             </div>
+            <ul
+              class="errors"
+              v-if="errors[`settings.${type}.values.${value}`]"
+            >
+              <li>{{ errors[`settings.${type}.values.${value}`] }}</li>
+            </ul>
           </div>
         </div>
 
@@ -96,12 +132,15 @@
           <label :for="'settings-' + type + '-skip'">Skip {{ type }}</label>
         </div>
       </fieldset>
+      <ul class="errors" v-if="errors[`settings.${type}.method`]">
+        <li>{{ errors[`settings.${type}.method`] }}</li>
+      </ul>
     </div>
   </div>
 </template>
 
 <script>
-import * as SETTINGS from "../constants/settings-types";
+import * as SETTINGS from "../constants/settingsTypes";
 import { mapMutations, mapGetters, mapState } from "vuex";
 
 export default {
@@ -118,6 +157,7 @@ export default {
           state.variantConfiguration.settings[this.type] || this.defaultSettings
         );
       },
+      errors: (state) => state.formErrors,
     }),
     ...mapGetters({
       defaultSettings: "defaultSettings",
@@ -131,7 +171,7 @@ export default {
       get() {
         return this.variantSettings[SETTINGS.METHOD];
       },
-      set(val) {
+      async set(val) {
         const settings = {
           ...this.variantSettings,
           ...{ [SETTINGS.METHOD]: val },
@@ -143,7 +183,7 @@ export default {
       get() {
         return this.variantSettings[SETTINGS.FIELD];
       },
-      set(val) {
+      async set(val) {
         const settings = {
           ...this.variantSettings,
           ...{ [SETTINGS.FIELD]: val },
@@ -155,7 +195,7 @@ export default {
       get() {
         return this.variantSettings[SETTINGS.VALUES];
       },
-      set(val) {
+      async set(val) {
         const settings = {
           ...this.variantSettings,
           ...{ [SETTINGS.VALUES]: val },

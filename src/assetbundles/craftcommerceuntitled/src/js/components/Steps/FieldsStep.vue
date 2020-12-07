@@ -11,7 +11,7 @@
         >
       </label>
     </div>
-    <div class="input ltr">
+    <div class="input ltr" :class="{ errors: errors.fields }">
       <fieldset class="checkbox-group">
         <div v-for="field in fields">
           <input
@@ -27,33 +27,42 @@
           </label>
         </div>
       </fieldset>
+      <ul class="errors" v-if="errors.fields">
+        <li>{{ errors.fields }}</li>
+      </ul>
     </div>
   </div>
 </template>
 
 <script>
 import { mapState, mapMutations, mapGetters, mapActions } from "vuex";
+import { fieldsStep } from "../../store/stepState";
+import { SET_VARIANT_CONFIGURATION_FIELDS } from "../../constants/mutationTypes";
 
 export default {
   computed: {
     ...mapState({
       fields: (state) => state.variantConfigurationTypeFields,
+      errors: (state) => state.formErrors,
     }),
     ...mapGetters({ isAllSelected: "isAllFieldsSelected" }),
     variantFields: {
       get() {
         return this.$store.state.variantConfiguration.fields;
       },
-      set(val) {
-        this.setVariantConfigurationFields(val);
+      async set(val) {
+        const { rules } = fieldsStep;
+        if (await this.validate({ values: { fields: val }, schema: rules })) {
+          this.setFields(val);
+        }
       },
     },
   },
   methods: {
     ...mapMutations({
-      setVariantConfigurationFields: "SET_VARIANT_CONFIGURATION_FIELDS",
+      setFields: SET_VARIANT_CONFIGURATION_FIELDS,
     }),
-    ...mapActions(["toggleAllSelectedFields"]),
+    ...mapActions(["toggleAllSelectedFields", "validate"]),
   },
 };
 </script>

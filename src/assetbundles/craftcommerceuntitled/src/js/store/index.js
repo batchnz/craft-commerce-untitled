@@ -1,9 +1,11 @@
 import Vuex from "vuex";
 import Vue from "vue";
-import Api from "../api";
 
-import * as MUTATIONS from "../constants/mutation-types";
-import * as SETTINGS from "../constants/settings-types";
+import Api from "../api";
+import State from "./stepState";
+
+import * as MUTATIONS from "../constants/mutationTypes";
+import * as SETTINGS from "../constants/settingsTypes";
 
 Vue.use(Vuex);
 
@@ -18,6 +20,14 @@ const defaultSettings = {
   [SETTINGS.VALUES]: {},
 };
 
+const setSettingsDefaults = () => {
+  const settings = {};
+  SETTINGS.TYPES.forEach((type) => {
+    settings[type] = { ...defaultSettings };
+  });
+  return settings;
+};
+
 /**
  * Vuex Store
  * @type {Object}
@@ -29,13 +39,15 @@ export default new Vuex.Store({
     },
     step: 0,
     totalSteps: 5,
+    formErrors: {},
     variantConfiguration: {
       id: null,
+      title: "",
       productId: null,
       typeId: null,
       fields: [],
       values: [],
-      settings: {},
+      settings: setSettingsDefaults(),
     },
     variantConfigurations: [],
     variantConfigurationTypeFields: [],
@@ -174,6 +186,20 @@ export default new Vuex.Store({
         },
       };
     },
+
+    /**
+     * Sets the current step
+     */
+    [MUTATIONS.SET_STEP](state, step) {
+      state.step = step;
+    },
+
+    /**
+     * Sets the form errors
+     */
+    [MUTATIONS.SET_FORM_ERRORS](state, errors) {
+      state.formErrors = errors;
+    },
   },
   actions: {
     /**
@@ -241,8 +267,73 @@ export default new Vuex.Store({
 
       commit(MUTATIONS.SET_VARIANT_CONFIGURATION_VALUES, variantValues);
     },
+
+    /**
+     * Navigate to the next step
+     * @author Josh Smith <josh@batch.nz>
+     * @param  int  step
+     * @return void
+     */
+    async nextStep({ commit, getters, state, dispatch }) {
+      const { rules } = getters.currentStepState;
+
+      const valid = await dispatch("validate", {
+        schema: rules,
+        values: state.variantConfiguration,
+      });
+      if (!valid) return;
+
+      if (state.step >= state.totalSteps) {
+        return;
+      }
+      commit(MUTATIONS.SET_STEP, state.step + 1);
+    },
+
+    /** Navigate to the next step
+     * @author Josh Smith <josh@batch.nz>
+     * @param  int  step
+     * @return void
+     */
+    async prevStep({ commit, getters, state }) {
+      if (state.step < 0) {
+        return;
+      }
+      commit(MUTATIONS.SET_STEP, state.step - 1);
+    },
+
+    async validate({ commit, getters, state }, { schema, values }) {
+      try {
+        commit(MUTATIONS.SET_FORM_ERRORS, {});
+        await schema.validate(values, { abortEarly: false });
+      } catch (err) {
+        if (err.inner) {
+          err.inner.forEach((error) => {
+            commit(MUTATIONS.SET_FORM_ERRORS, {
+              ...state.formErrors,
+              ...{ [error.path]: error.message },
+            });
+          });
+        }
+
+        return false;
+      }
+
+      return true;
+    },
   },
   getters: {
+    /**
+     * Returns settings by type
+     * @author Josh Smith <josh@batch.nz>
+     * @param  object state
+     * @return string
+     */
+    settingsByType(state) {
+      return (type) => {
+        return state.variantConfiguration.settings[type] || {};
+      };
+    },
+
     /**
      * Returns whether all variant configuration fields have been selected
      * @author Josh Smith <josh@batch.nz>
@@ -327,6 +418,46 @@ export default new Vuex.Store({
       });
       return values;
     },
+
+    /**
+     * Returns the current step's state
+     * @author Josh Smith <josh@batch.nz>
+     * @param  object state
+     * @param  object getters
+     * @return object
+     */
+    currentStepState(state, getters) {
+      return getters.stepState(state.step);
+    },
+
+    /**
+     * Returns the state for each form step
+     * @author Josh Smith <josh@batch.nz>
+     * @return object
+     */
+    stepState(state, getters) {
+      return (step) => {
+        switch (step) {
+          case 0:
+          default:
+            return State.indexStep;
+          case 1:
+            return State.nameStep;
+          case 2:
+            return State.fieldsStep;
+          case 3:
+            return State.valuesStep;
+          case 4:
+            return State.settingsStep;
+        }
+      };
+    },
+
+    /**
+     * Returns the default settings object properties
+     * @author Josh Smith <josh@batch.nz>
+     * @return objects
+     */
     defaultSettings() {
       return defaultSettings;
     },

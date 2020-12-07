@@ -1,16 +1,16 @@
 <template>
-  <div class="field width-100">
+  <form class="field width-100">
     <div class="heading">
       <label for="configuration-name">Name</label>
     </div>
     <div id="configuration-name-instructions" class="instructions">
       <p>Give your configuration a name e.g. "Accent Colours"</p>
     </div>
-    <div class="input ltr">
+    <div class="input ltr" :class="{ errors: errors.title }">
       <textarea
-        @input="setTitle($event.target.value)"
-        id="configuration-name"
+        @input="handleInput($event.target.value)"
         class="nicetext text"
+        id="configuration-name"
         name="title"
         rows="1"
         cols="50"
@@ -18,18 +18,34 @@
         style="min-height: 32px"
         >{{ title }}</textarea
       >
+      <ul class="errors" v-if="errors.title">
+        <li>{{ errors.title }}</li>
+      </ul>
     </div>
-  </div>
+  </form>
 </template>
 
 <script>
-import { mapState, mapMutations } from "vuex";
+import { mapState, mapMutations, mapActions } from "vuex";
+import { nameStep } from "../../store/stepState";
+import { SET_VARIANT_CONFIGURATION_TITLE } from "../../constants/mutationTypes";
+
 export default {
   computed: mapState({
     title: (state) => state.variantConfiguration.title,
+    errors: (state) => state.formErrors,
   }),
-  methods: mapMutations({
-    setTitle: "SET_VARIANT_CONFIGURATION_TITLE",
-  }),
+  methods: {
+    ...mapMutations({
+      setTitle: SET_VARIANT_CONFIGURATION_TITLE,
+    }),
+    ...mapActions(["validate"]),
+    async handleInput(value) {
+      const { rules } = nameStep;
+      if (await this.validate({ values: { title: value }, schema: rules })) {
+        this.setTitle(value);
+      }
+    },
+  },
 };
 </script>

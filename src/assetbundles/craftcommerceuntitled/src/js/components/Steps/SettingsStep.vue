@@ -10,7 +10,7 @@
 <script>
 import Vue from "vue";
 import AppSettings from "../AppSettings";
-import { TYPES } from "../../constants/settings-types";
+import { TYPES } from "../../constants/settingsTypes";
 
 export default {
   components: {

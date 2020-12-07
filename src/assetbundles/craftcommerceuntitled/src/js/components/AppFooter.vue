@@ -1,11 +1,11 @@
 <template>
   <div class="footer">
     <div class="buttons right">
-      <button @click="$emit('secBtnClick')" class="btn">
+      <button @click="prevStep" class="btn">
         {{ secBtnText }}
       </button>
       <button
-        @click="$emit('priBtnClick')"
+        @click="nextStep"
         :disabled="isLoading"
         :class="{ disabled: isLoading }"
         class="btn submit"
@@ -17,11 +17,13 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
 export default {
   props: {
     isLoading: Boolean,
     priBtnText: String,
     secBtnText: String,
   },
+  methods: mapActions(["nextStep", "prevStep"]),
 };
 </script>
