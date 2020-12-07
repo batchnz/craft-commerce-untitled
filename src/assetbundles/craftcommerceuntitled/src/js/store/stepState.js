@@ -73,7 +73,7 @@ export const valuesStep = {
  * @param  array    settingsTypes
  * @return object
  */
-const getSettingsTypeRules = (settingsTypes = TYPES) => {
+export const getSettingsTypeRules = (settingsTypes = TYPES) => {
   const rules = {};
   settingsTypes.forEach((type) => {
     rules[type] = object({
@@ -106,7 +106,7 @@ const getSettingsTypeRules = (settingsTypes = TYPES) => {
         .nullable(),
     });
   });
-  return rules;
+  return object(rules);
 };
 
 /**
@@ -160,8 +160,20 @@ export const settingsStep = {
     priBtnText: "Save Configuration",
   },
   rules: object().shape({
-    settings: object(getSettingsTypeRules()),
+    settings: getSettingsTypeRules(),
   }),
+};
+
+export const generateStep = {
+  component: "GenerateStep",
+  header: {
+    ...defaults.header,
+    subtitle: "Step 5. Generate your variants",
+  },
+  footer: {
+    ...defaults.footer,
+    priBtnText: "Generate Variants",
+  },
 };
 
 export default {
@@ -170,4 +182,5 @@ export default {
   fieldsStep,
   valuesStep,
   settingsStep,
+  generateStep,
 };

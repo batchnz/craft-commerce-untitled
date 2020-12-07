@@ -17,6 +17,23 @@ const getVariantConfigurationTypeFields = async (params = {}) => {
 };
 
 /**
+ * Saves a variant configuration fields to the API
+ * @author Josh Smith <josh@batch.nz>
+ * @return Promise
+ */
+const saveVariantConfiguration = async (data = {}) => {
+  return await fetch(getApiUrl("variant-configurations"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify(data),
+  });
+};
+
+/**
  * Static method that returns an API url
  * @author Josh Smith <josh@batch.nz>
  * @param  string slug
@@ -36,4 +53,5 @@ const getApiUrl = (slug = "", params = {}) => {
 export default {
   getVariantConfigurations,
   getVariantConfigurationTypeFields,
+  saveVariantConfiguration,
 };

@@ -28,24 +28,17 @@ import {
   FieldsStep,
   ValuesStep,
   SettingsStep,
+  GenerateStep,
 } from "./Steps";
 
 import { mapActions, mapState, mapMutations, mapGetters } from "vuex";
+import * as MUTATIONS from "../constants/mutationTypes";
 
 export default {
-  components: {
-    AppLoading,
-    AppHeader,
-    AppFooter,
-    IndexStep,
-    NameStep,
-    FieldsStep,
-    ValuesStep,
-    SettingsStep,
-  },
   props: {
     productId: null,
     productTypeId: null,
+    variantConfigurationTypeId: null,
   },
   computed: {
     ...mapState({
@@ -57,6 +50,11 @@ export default {
   },
   async created() {
     this.setIsLoading(true);
+
+    // Commit initial ID values to the store
+    this.setProductId(this.productId);
+    this.setProductTypeId(this.productTypeId);
+    this.setTypeId(this.variantConfigurationTypeId);
 
     await this.fetchVariantConfigurations({
       productId: this.productId,
@@ -73,8 +71,23 @@ export default {
       "fetchVariantConfigurations",
       "fetchVariantConfigurationTypeFields",
     ]),
-
-    ...mapMutations({ setIsLoading: "SET_IS_LOADING" }),
+    ...mapMutations({
+      setIsLoading: MUTATIONS.SET_IS_LOADING,
+      setProductId: MUTATIONS.SET_PRODUCT_ID,
+      setProductTypeId: MUTATIONS.SET_PRODUCT_TYPE_ID,
+      setTypeId: MUTATIONS.SET_TYPE_ID,
+    }),
+  },
+  components: {
+    AppLoading,
+    AppHeader,
+    AppFooter,
+    IndexStep,
+    NameStep,
+    FieldsStep,
+    ValuesStep,
+    SettingsStep,
+    GenerateStep,
   },
 };
 </script>

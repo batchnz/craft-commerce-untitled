@@ -24,6 +24,7 @@ import App from "./components/App.vue";
     settings: {
       productId: null,
       productTypeId: null,
+      variantConfigurationTypeId: null,
     },
 
     /**
@@ -53,6 +54,7 @@ import App from "./components/App.vue";
         new Craft.VariantConfigurationModal({
           productId: this.settings.productId,
           productTypeId: this.settings.productTypeId,
+          variantConfigurationTypeId: this.settings.variantConfigurationTypeId,
         });
       });
     },
@@ -75,6 +77,7 @@ import App from "./components/App.vue";
     settings: {
       productId: null,
       productTypeId: null,
+      variantConfigurationTypeId: null,
     },
     closeOtherModals: true,
     shadeClass: "modal-shade dark",
@@ -104,6 +107,8 @@ import App from "./components/App.vue";
             props: {
               productId: this.settings.productId,
               productTypeId: this.settings.productTypeId,
+              variantConfigurationTypeId: this.settings
+                .variantConfigurationTypeId,
             },
           }),
       });

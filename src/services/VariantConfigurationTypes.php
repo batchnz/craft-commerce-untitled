@@ -52,7 +52,7 @@ class VariantConfigurationTypes extends Component
         $variantConfigurationTypeRecord = VariantConfigurationType::findOne($id);
 
         if( empty($variantConfigurationTypeRecord) ){
-            throw new Exception('Failed to load variant configuration record.');
+            throw new Exception('Failed to load variant configuration type record.');
         }
 
         $variantConfigurationType = new VariantConfigurationType;

@@ -70,13 +70,19 @@ class ProductsController extends CommerceProductsController
 
         $product->setVariants([]);
 
+        // Fetch the variant configuration type
+        $variantConfigurationType = Plugin::getInstance()
+            ->getVariantConfigurationTypes()
+            ->getVariantConfigurationTypeByProductTypeId($product->typeId);
+
         // Load the main plugin scripts
         $this->view->registerAssetBundle(CraftCommerceUntitledBundle::class);
         $this->view->registerJs('Craft.CommerceUntitled.pluginHandle = "'.Plugin::getInstance()->id.'";');
         $this->view->registerJs('Craft.CommerceUntitled.apiVersion = "'.Plugin::getInstance()->apiVersion.'";');
         $this->view->registerJs('new Craft.CommerceUntitled({
             productId: ' . $product->id . ',
-            productTypeId: ' . $product->getType()->id . '
+            productTypeId: ' . $product->typeId . ',
+            variantConfigurationTypeId: ' . $variantConfigurationType->id . '
         });');
 
         // Carry on as normal with a preloaded product

@@ -141,7 +141,7 @@
 
 <script>
 import * as SETTINGS from "../constants/settingsTypes";
-import { mapMutations, mapGetters, mapState } from "vuex";
+import { mapActions, mapMutations, mapGetters, mapState } from "vuex";
 
 export default {
   props: {
@@ -162,7 +162,7 @@ export default {
     ...mapGetters({
       defaultSettings: "defaultSettings",
       selectedFields: "selectedFields",
-      selectedValuesByHandle: "selectedFieldValuesByHandle",
+      selectedValuesByHandle: "selectedOptionsByFieldHandle",
     }),
     settingsTitle() {
       return this.type.charAt(0).toUpperCase() + this.type.slice(1);
@@ -205,6 +205,7 @@ export default {
     },
   },
   methods: {
+    ...mapActions(["validate"]),
     ...mapMutations({
       setSettingsType: "SET_VARIANT_CONFIGURATION_SETTINGS_TYPE",
     }),

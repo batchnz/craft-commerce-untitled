@@ -44,6 +44,10 @@ class VariantConfigurationsController extends Controller
         // Initialise a blank variant configuration query
         $variantConfigurationsQuery = VariantConfigurationModel::find();
 
+        if( $id = $this->request->getQueryParam('id') ){
+            $variantConfigurationsQuery->id($id);
+        }
+
         // Filter on product Ids
         if( $productId = $this->request->getQueryParam('productId') ){
             $variantConfigurationsQuery->productId($productId);
@@ -217,7 +221,7 @@ class VariantConfigurationsController extends Controller
 
         return $this->asJson([
             'result' => 'success',
-            'data' => $variantConfiguration
+            // 'data' => $variantConfiguration
         ]);
     }
 }

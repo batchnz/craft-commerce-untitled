@@ -3,6 +3,7 @@ import Vue from "vue";
 
 import Api from "../api";
 import State from "./stepState";
+import eventBus from "./eventBus";
 
 import * as MUTATIONS from "../constants/mutationTypes";
 import * as SETTINGS from "../constants/settingsTypes";
@@ -37,22 +38,64 @@ export default new Vuex.Store({
     ui: {
       isLoading: false,
     },
-    step: 0,
+    step: 5,
     totalSteps: 5,
     formErrors: {},
+    productId: null,
+    productTypeId: null,
+    typeId: null,
     variantConfiguration: {
       id: null,
-      title: "",
-      productId: null,
-      typeId: null,
-      fields: [],
-      values: [],
-      settings: setSettingsDefaults(),
+      title: "Enamel Paint",
+      fields: ["paintSheen"],
+      values: [4248, 5124, 5125],
+      settings: {
+        price: {
+          method: "field",
+          field: "paintSheen",
+          values: { 4248: "22", 5124: "46", 5125: "92" },
+        },
+        stock: { method: "all", field: "paintSheen", values: { value: "99" } },
+        sku: { method: "skip", field: null, values: {} },
+      },
     },
     variantConfigurations: [],
     variantConfigurationTypeFields: [],
   },
   mutations: {
+    /**
+     * Sets the product ID
+     * @author Josh Smith <josh@batch.nz>
+     * @since  1.0.0
+     * @param object state
+     * @param object payload
+     */
+    [MUTATIONS.SET_PRODUCT_ID](state, payload) {
+      state.productId = payload;
+    },
+
+    /**
+     * Sets the product type ID
+     * @author Josh Smith <josh@batch.nz>
+     * @since  1.0.0
+     * @param object state
+     * @param object payload
+     */
+    [MUTATIONS.SET_PRODUCT_TYPE_ID](state, payload) {
+      state.productTypeId = payload;
+    },
+
+    /**
+     * Sets the variant configuration type ID
+     * @author Josh Smith <josh@batch.nz>
+     * @since  1.0.0
+     * @param object state
+     * @param object payload
+     */
+    [MUTATIONS.SET_TYPE_ID](state, payload) {
+      state.typeId = payload;
+    },
+
     /**
      * Sets the variant configurations data
      * @author Josh Smith <josh@batch.nz>
@@ -94,7 +137,7 @@ export default new Vuex.Store({
      * @param object payload
      */
     [MUTATIONS.SET_VARIANT_CONFIGURATION](state, payload) {
-      state.variantConfiguration = payload;
+      state.variantConfiguration = { ...payload };
     },
 
     /**
@@ -203,6 +246,43 @@ export default new Vuex.Store({
   },
   actions: {
     /**
+     * Saves a VC to the server
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
+    async saveVariantConfiguration({ commit, state, getters }) {
+      const response = await Api.saveVariantConfiguration({
+        ...state.variantConfiguration,
+        ...{ values: getters.selectedOptionValuesByFieldHandle },
+        ...{ productId: state.productId, typeId: state.typeId },
+      });
+      const { data: variantConfiguration } = await response.json();
+      console.log("variantConfiguration:", variantConfiguration);
+    },
+
+    /**
+     * Sets the current editable variant configuration
+     * by fetching the vc from loaded data by ID
+     * @author Josh Smith <josh@batch.nz>
+     * @param  int variantConfigurationId
+     */
+    async setCurrentVariantConfigurationById(
+      { commit, state },
+      variantConfigurationId
+    ) {
+      const variantConfiguration = state.variantConfigurations.find(
+        (vc) => vc.id === variantConfigurationId
+      );
+
+      if (variantConfiguration == null) {
+        throw new Error("Variant Configuration not found");
+      }
+
+      commit(MUTATIONS.SET_VARIANT_CONFIGURATION, variantConfiguration);
+      commit(MUTATIONS.SET_STEP, 1);
+    },
+
+    /**
      * Loads required variant configurations from the API
      * @author Josh Smith <josh@batch.nz>
      * @return Promise
@@ -283,10 +363,18 @@ export default new Vuex.Store({
       });
       if (!valid) return;
 
-      if (state.step >= state.totalSteps) {
-        return;
-      }
-      commit(MUTATIONS.SET_STEP, state.step + 1);
+      // Emit an event so that components can hook into the submission
+      eventBus.emit("form-submission", null, async (cb) => {
+        if (typeof cb === "function") {
+          const result = await cb();
+          if (result === false) return;
+        }
+
+        if (state.step >= state.totalSteps) {
+          return;
+        }
+        commit(MUTATIONS.SET_STEP, state.step + 1);
+      });
     },
 
     /** Navigate to the next step
@@ -389,7 +477,7 @@ export default new Vuex.Store({
      * @param  object getters
      * @return object
      */
-    selectedFieldValuesByHandle(state, getters) {
+    selectedOptionsByFieldHandle(state, getters) {
       const values = {};
 
       // Loop the fields and determine the available values
@@ -415,6 +503,42 @@ export default new Vuex.Store({
       const values = {};
       state.variantConfigurationTypeFields.forEach((field) => {
         values[field.handle] = field.values.map(({ value }) => value);
+      });
+      return values;
+    },
+
+    /**
+     * Returns all field value option labels keyed by ID
+     * @author Josh Smith <josh@batch.nz>
+     * @param  object state
+     * @return object
+     */
+    optionValuesById(state) {
+      const values = {};
+      state.variantConfigurationTypeFields.forEach((field) => {
+        field.values.forEach((option) => {
+          values[option.value] = option.label;
+        });
+      });
+      return values;
+    },
+
+    /**
+     * Returns selected option values keyed by field handle
+     * Used in the API request when saving configurations
+     * @author Josh Smith <josh@batch.nz>
+     * @param  object state
+     * @return object
+     */
+    selectedOptionValuesByFieldHandle(state, getters) {
+      const values = {};
+      getters.selectedFields.forEach((field) => {
+        field.values.forEach((option) => {
+          if (!Array.isArray(values[field.handle])) {
+            values[field.handle] = [];
+          }
+          values[field.handle].push(option.value);
+        });
       });
       return values;
     },
@@ -449,6 +573,8 @@ export default new Vuex.Store({
             return State.valuesStep;
           case 4:
             return State.settingsStep;
+          case 5:
+            return State.generateStep;
         }
       };
     },

@@ -59,9 +59,8 @@ export default {
         return this.variantValues;
       },
       async set(values) {
-        if (await this.isValid(values)) {
-          this.setValues(values);
-        }
+        await this.isValid(values);
+        this.setValues(values);
       },
     },
   },

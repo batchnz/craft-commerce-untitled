@@ -57,6 +57,7 @@ class VariantConfiguration
         } else {
             $variantConfiguration = new VariantConfigurationModel();
             $variantConfiguration->typeId = $request->getBodyParam('typeId');
+            $variantConfiguration->productId = $request->getBodyParam('productId');
             $variantConfiguration->siteId = $siteId ?? $variantConfiguration->siteId;
         }
 

@@ -42,9 +42,8 @@ export default {
     ...mapActions(["validate"]),
     async handleInput(value) {
       const { rules } = nameStep;
-      if (await this.validate({ values: { title: value }, schema: rules })) {
-        this.setTitle(value);
-      }
+      await this.validate({ values: { title: value }, schema: rules });
+      this.setTitle(value);
     },
   },
 };

@@ -9,17 +9,29 @@
 
 <script>
 import Vue from "vue";
+import { mapActions } from "vuex";
+import eventBus from "../../store/eventBus";
 import AppSettings from "../AppSettings";
 import { TYPES } from "../../constants/settingsTypes";
 
 export default {
-  components: {
-    AppSettings,
+  created() {
+    eventBus.on("form-submission", (cb) => {
+      cb(async () => {
+        return await this.saveVariantConfiguration();
+      });
+    });
   },
   computed: {
     types() {
       return TYPES;
     },
+  },
+  methods: {
+    ...mapActions(["saveVariantConfiguration"]),
+  },
+  components: {
+    AppSettings,
   },
 };
 </script>

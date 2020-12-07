@@ -52,9 +52,8 @@ export default {
       },
       async set(val) {
         const { rules } = fieldsStep;
-        if (await this.validate({ values: { fields: val }, schema: rules })) {
-          this.setFields(val);
-        }
+        await this.validate({ values: { fields: val }, schema: rules });
+        this.setFields(val);
       },
     },
   },

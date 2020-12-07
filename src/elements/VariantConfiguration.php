@@ -411,12 +411,14 @@ class VariantConfiguration extends Element
         };
 
         $customElementFields = [];
-        foreach ($this->fieldLayoutFields() as $field) {
-            $customElementFields[$field->handle] = function() use($field){
+        $customElementFields['values'] = function(){
+            $values = [];
+            foreach ($this->fieldLayoutFields() as $field) {
                 $value = $this->getFieldValue($field->handle);
-                return $field->serializeValue($value, $this);
-            };
-        }
+                $values = array_merge($values, $field->serializeValue($value, $this));
+            }
+            return $values;
+        };
 
         return array_merge($baseElementFields, $customElementFields);
     }
