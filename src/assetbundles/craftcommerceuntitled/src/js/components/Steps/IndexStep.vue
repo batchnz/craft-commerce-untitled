@@ -36,7 +36,8 @@ export default {
         data.push([
           config.id,
           config.title,
-          config.numberOfVariants,
+          "TBD",
+          // config.numberOfVariants,
           dateUpdated,
         ]);
       });

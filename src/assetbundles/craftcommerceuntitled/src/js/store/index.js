@@ -316,6 +316,17 @@ export default new Vuex.Store({
   },
   actions: {
     /**
+     * Resets the VC form
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
+    async resetForm({ commit, dispatch }) {
+      dispatch("createNewVariantConfiguration");
+      commit(MUTATIONS.SET_IS_COMPLETED, false);
+      commit(MUTATIONS.SET_STEP, 0);
+    },
+
+    /**
      * Saves a VC to the server
      * @author Josh Smith <josh@batch.nz>
      * @return void
@@ -359,7 +370,9 @@ export default new Vuex.Store({
      * @return void
      */
     async generateVariants({ commit }, variantConfigurationId) {
+      commit(MUTATIONS.SET_IS_SUBMITTING, true);
       const response = await Api.generateVariants(variantConfigurationId);
+      commit(MUTATIONS.SET_IS_SUBMITTING, false);
     },
 
     /**
@@ -498,9 +511,8 @@ export default new Vuex.Store({
      * @param  int  step
      * @return void
      */
-    async menuStep({ commit }) {
-      commit(MUTATIONS.SET_IS_COMPLETED, false);
-      commit(MUTATIONS.SET_STEP, 0);
+    async menuStep({ commit, dispatch }) {
+      dispatch("resetForm");
     },
 
     /**
@@ -528,6 +540,11 @@ export default new Vuex.Store({
       return true;
     },
 
+    /**
+     * Creates a new variant configuration
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
     async createNewVariantConfiguration({ commit, dispatch }) {
       await dispatch("clearFormErrors");
       commit(MUTATIONS.SET_VARIANT_CONFIGURATION, getNewVariantConfiguration());

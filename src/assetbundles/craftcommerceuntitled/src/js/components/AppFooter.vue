@@ -4,7 +4,7 @@
       <button @click="menuStep" class="btn icon nav">Menu</button>
     </div>
     <div v-if="!isCompleted" class="buttons right">
-      <button @click="prevStep" class="btn">
+      <button @click="handleSecBtnClick" class="btn">
         {{ secBtnText }}
       </button>
       <button
@@ -22,7 +22,7 @@
       </button>
     </div>
     <div v-else class="buttons right">
-      <button @click="closeModal" class="btn submit">Finish</button>
+      <button @click="$emit('close-modal')" class="btn submit">Finish</button>
     </div>
   </div>
 </template>
@@ -40,7 +40,13 @@ export default {
   },
   methods: {
     ...mapActions(["nextStep", "prevStep", "menuStep"]),
-    closeModal() {},
+    handleSecBtnClick() {
+      if (this.step === 0) {
+        this.$emit("close-modal");
+      } else {
+        this.prevStep();
+      }
+    },
   },
 };
 </script>

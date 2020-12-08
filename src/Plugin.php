@@ -296,6 +296,17 @@ class Plugin extends CraftPlugin
             UrlManager::class,
             UrlManager::EVENT_REGISTER_SITE_URL_RULES,
             function (RegisterUrlRulesEvent $event) {
+                // Variants Controller
+                $event->rules[] = [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => [
+                        RoutesHelper::getApiRoute('variants') => RoutesHelper::getApiController('variants')
+                    ],
+                    'extraPatterns' => [
+                        'POST' => 'index',
+                    ]
+                ];
+
                 // Variant Configurations Controller
                 $event->rules[] = [
                     'class' => 'yii\rest\UrlRule',

@@ -78,17 +78,30 @@ class VariantConfigurations extends Component
                     $fields[$handle] = [$value];
                 }
             }
+        }
 
+        // Delete existing variants
+        foreach ($fields as $field => $values) {
+            $matchingVariants = Variant::find()->{$field}($values)->all();
+            foreach ($matchingVariants as $variant) {
+                Craft::$app->getElements()->deleteElement($variant, true);
+            }
+        }
+
+        // Create new Variants
+        foreach ($permutation as $fieldValues) {
             // Normalize variant attributes
             $price = $configuration->normalizeSettingsValue('price', $fieldValues) ?? 0.00;
             $stock = $configuration->normalizeSettingsValue('stock', $fieldValues) ?? null;
+            $sku = $configuration->normalizeSettingsValue('sku', $fieldValues) ?? '';
 
             $variantData = [
                 'price' => $price,
                 'stock' => $stock,
                 'minQty' => null,
                 'maxQty' => null,
-                'fields' => $fields
+                'fields' => $fields,
+                'sku' => $sku
             ];
 
             // Populate the variant element

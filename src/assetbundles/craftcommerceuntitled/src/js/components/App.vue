@@ -17,6 +17,7 @@
       :priBtnText="state.footer.priBtnText"
       :secBtnText="state.footer.secBtnText"
       :step="step"
+      @close-modal="handleCloseModal"
     />
   </div>
 </template>
@@ -39,9 +40,10 @@ import * as MUTATIONS from "../constants/mutationTypes";
 
 export default {
   props: {
-    productId: null,
-    productTypeId: null,
-    variantConfigurationTypeId: null,
+    productId: Number,
+    productTypeId: Number,
+    variantConfigurationTypeId: Number,
+    $modal: Object,
   },
   computed: {
     ...mapState({
@@ -83,6 +85,9 @@ export default {
       setProductTypeId: MUTATIONS.SET_PRODUCT_TYPE_ID,
       setTypeId: MUTATIONS.SET_TYPE_ID,
     }),
+    handleCloseModal() {
+      this.$modal.hide();
+    },
   },
   components: {
     AppLoading,

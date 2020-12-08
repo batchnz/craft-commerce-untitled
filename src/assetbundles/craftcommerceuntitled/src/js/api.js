@@ -24,17 +24,17 @@ const getVariantConfigurationTypeFields = async (params = {}) => {
 const generateVariants = async (variantConfigurationId, data = {}) => {
   return await fetch(
     getApiUrl(
-      `variant-configurations/${variantConfigurationId}/variants/generate`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-        },
-        body: JSON.stringify(data),
-      }
-    )
+      `variant-configurations/${variantConfigurationId}/variants/generate`
+    ),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: JSON.stringify(data),
+    }
   );
 };
 

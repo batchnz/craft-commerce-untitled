@@ -37,6 +37,7 @@ import App from "./components/App.vue";
       const self = this;
       this.settings = $.extend({}, Craft.CommerceUntitled.defaults, settings);
       this.initEditBtn();
+      this.initDataTables();
     },
 
     /**
@@ -56,6 +57,14 @@ import App from "./components/App.vue";
           productTypeId: this.settings.productTypeId,
           variantConfigurationTypeId: this.settings.variantConfigurationTypeId,
         });
+      });
+    },
+
+    initDataTables() {
+      const productId = this.settings.productId;
+      $("#configurable-variants").DataTable({
+        serverMethod: "post",
+        ajax: `https://www.naturalpaintco001.batch/craft-commerce-untitled/api/v1/variants?productId=${productId}`,
       });
     },
 
@@ -84,11 +93,8 @@ import App from "./components/App.vue";
 
     init(settings) {
       const self = this;
-      this.settings = $.extend(
-        {},
-        Craft.VariantConfigurationModal.defaults,
-        settings
-      );
+
+      this.setSettings(settings, Craft.VariantConfigurationModal.defaults);
 
       // Append the root element
       this.$container = $(
@@ -99,7 +105,7 @@ import App from "./components/App.vue";
         </div>`
       ).appendTo(Garnish.$bod);
 
-      new Vue({
+      const vm = new Vue({
         el: "#variant-configuration-app",
         store,
         render: (h) =>
@@ -109,8 +115,15 @@ import App from "./components/App.vue";
               productTypeId: this.settings.productTypeId,
               variantConfigurationTypeId: this.settings
                 .variantConfigurationTypeId,
+              $modal: this,
             },
           }),
+      });
+
+      // Destroy the Vue instance when hidden
+      this.on("hide", () => {
+        vm.$destroy();
+        store.dispatch("resetForm");
       });
 
       this.base(this.$container, settings);

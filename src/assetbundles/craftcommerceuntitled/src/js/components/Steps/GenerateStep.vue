@@ -30,9 +30,8 @@
         style="margin: 0 0 0 16px; list-style-type: disc"
       >
         <li v-if="variantConfiguration.settings[type].method === 'all'">
-          {{ getTitle(type) }} - ${{
-            variantConfiguration.settings[type].values.value
-          }}
+          {{ getTitle(type) }} - {{ type === "price" ? "$" : ""
+          }}{{ variantConfiguration.settings[type].values.value }}
           for all variants
         </li>
         <template v-if="variantConfiguration.settings[type].method === 'field'">
@@ -43,7 +42,8 @@
                 .values"
               v-if="fieldId !== 'value'"
             >
-              {{ optionValuesById[fieldId] }} - ${{ price }}
+              {{ optionValuesById[fieldId] }} - {{ type === "price" ? "$" : ""
+              }}{{ price }}
             </li>
           </ul>
         </template>
@@ -104,7 +104,7 @@ export default {
       return title.charAt(0).toUpperCase() + title.slice(1);
     },
     async handleGenerateVariants() {
-      await this.generateVariants();
+      await this.generateVariants(this.variantConfiguration.id);
       this.setIsCompleted();
       this.isGenerating = true;
     },

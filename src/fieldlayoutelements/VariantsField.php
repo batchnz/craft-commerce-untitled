@@ -37,28 +37,25 @@ class VariantsField extends CommerceVariantsField
         }
 
         $type = $element->getType();
-
         if (!$type->hasVariants) {
             return null;
         }
 
+        $columns = '';
+        foreach ($type->getVariantFieldLayout()->getFields() as $field) {
+            $columns .= "<th>$field->name</th>";
+        }
+
         return <<<EOT
- <table>
-  <tr>
-    <th>SKU</th>
-    <th>Quantity</th>
-    <th>Price</th>
-  </tr>
-  <tr>
-    <td>paint-enamel-blue</td>
-    <td>4</td>
-    <td>$40.00</td>
-  </tr>
-  <tr>
-    <td>paint-enamel-red</td>
-    <td>8</td>
-    <td>$30.00</td>
-  </tr>
+ <table id="configurable-variants">
+  <thead>
+    <tr>
+      <th>SKU</th>
+      <th>Quantity</th>
+      <th>Price</th>
+      {$columns}
+    </tr>
+  </thead>
 </table>
 EOT;
     }

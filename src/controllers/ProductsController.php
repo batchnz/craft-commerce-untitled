@@ -60,14 +60,7 @@ class ProductsController extends CommerceProductsController
             return parent::actionEditProduct($productTypeHandle, $productId, $siteHandle);
         }
 
-        // // ...with a subset of variants
-        // $variants = Variant::find()
-        //     ->productId($productId)
-        //     ->anyStatus()
-        //     ->limit(10) // Todo, make configurable
-        //     ->siteId($variables['site']->id)
-        //     ->all();
-
+        // Prevent the product element from loading all variants
         $product->setVariants([]);
 
         // Fetch the variant configuration type

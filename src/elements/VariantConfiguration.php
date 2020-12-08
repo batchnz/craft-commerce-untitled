@@ -405,10 +405,10 @@ class VariantConfiguration extends Element
         // Filter out the fields we want
         $baseElementFields = array_intersect_key($baseFields, array_flip($fields));
 
-        // Add in the variant count
-        $baseElementFields['numberOfVariants'] = function(){
-            return $this->getVariantsCount();
-        };
+        // // Add in the variant count
+        // $baseElementFields['numberOfVariants'] = function(){
+        //     return $this->getVariantsCount();
+        // };
 
         $customElementFields = [];
         $customElementFields['values'] = function(){
@@ -484,7 +484,7 @@ class VariantConfiguration extends Element
 
         // Create a mapping of custom field values
         $fieldHandles = array_column($fields, 'handle');
-        $fieldMap = array_intersect_key($configurationData, array_flip($fieldHandles));
+        $fieldMap = array_intersect_key($configurationData['values'], array_flip($fieldHandles));
 
         return ArrayHelper::cartesian($fieldMap);
     }
@@ -544,6 +544,11 @@ class VariantConfiguration extends Element
                 $value = $settings->values[$elementId] ?? null;
                 break;
 
+            case 'all':
+                $value = $settings->values['value'] ?? null;
+                break;
+
+            case 'skip':
             default:
                 $value = null;
                 break;
