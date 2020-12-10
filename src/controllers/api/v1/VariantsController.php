@@ -18,6 +18,7 @@ use craft\commerce\Plugin as Commerce;
 use craft\commerce\elements\Variant;
 
 use Craft;
+use craft\elements\db\Element;
 
 use yii\rest\Controller;
 use yii\web\BadRequestHttpException;
@@ -49,70 +50,34 @@ class VariantsController extends Controller
         $limit = $this->request->getBodyParam('length');
         $search = $this->request->getBodyParam('search');
 
-        $recordsTotal = Variant::find()->product($productId)->count();
-        $recordsFilteredQuery = Variant::find()->product($productId);
+        // Fetch product
+        $product = Commerce::getInstance()->getProducts()->getProductById($productId);
+        if( empty($product) ) throw new NotFoundHttpException();
 
-        $variantsQuery = Variant::find()
+        // Fetch the fields on the variant field layout
+        $variantFieldLayout = $product->getType()->getVariantFieldLayout();
+        $fields = array_column($variantFieldLayout->getFields(), 'handle');
+
+        // Fetch variants with eager loaded fields
+        $variants = Variant::find()
             ->product($productId)
-            ->limit($limit);
-
-        if( $offset ){
-            $variantsQuery->offset($offset);
-        }
-
-        if( $limit ){
-            $variantsQuery->limit($limit);
-        }
-
-        if( !empty($search['value']) ){
-            $recordsFilteredQuery->search($search['value']);
-            $variantsQuery->search($search['value']);
-        }
-
-        $recordsFiltered = $recordsFilteredQuery->count();
-        $variants = $variantsQuery->all();
-
-        // $product = Commerce::getInstance()->getProducts()->getProductById($productId);
-        // foreach ($product-> as $key => $value) {
-        //     # code...
-        // }
+            ->with($fields)
+        ->all();
 
         $data = [];
         foreach ($variants as $variant) {
             $data[] = [
-                $variant->sku,
-                $variant->stock,
-                $variant->price,
-                $variant->paintColour,
-                $variant->paintSheen,
-                $variant->size,
+                ...[$variant->sku, $variant->stock, $variant->price],
+                ...array_map(function($field) use($variant) {
+                    return ($variant instanceof Element) ?
+                        $variant->{$field}[0]->title :
+                        $variant->{$field};
+                }, $fields)
             ];
         }
 
         return $this->asJson([
             'data' => $data,
-            'draw' => (int) $this->request->getBodyParam('draw'),
-            'recordsTotal' => (int) $recordsTotal,
-            'recordsFiltered' => (int) $recordsFiltered
         ]);
-        // // Initialise a blank variant configuration query
-        // $variantConfigurationsQuery = VariantConfigurationModel::find();
-
-        // if( $id = $this->request->getQueryParam('id') ){
-        //     $variantConfigurationsQuery->id($id);
-        // }
-
-        // // Filter on product Ids
-        // if( $productId = $this->request->getQueryParam('productId') ){
-        //     $variantConfigurationsQuery->productId($productId);
-        // }
-
-        // // Fetch all matching variant configurations
-        // $variantConfigurations = $variantConfigurationsQuery->all();
-
-        // return $this->asJson([
-        //     'result' => 'success',
-        //     'data' => $variantConfigurations
-        // ]);
     }
 }

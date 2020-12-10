@@ -1,6 +1,6 @@
 <template>
   <div>
-    <table ref="table" id="variant_configurations" class="display">
+    <table ref="table" id="variant_configurations" class="display data">
       <thead>
         <tr>
           <th>ID</th>

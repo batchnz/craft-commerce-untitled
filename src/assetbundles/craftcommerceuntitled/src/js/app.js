@@ -73,7 +73,6 @@ import "../css/app.scss";
     initDataTables() {
       const productId = this.settings.productId;
       $("#configurable-variants").DataTable({
-        pageLength: 25,
         ajax: `/craft-commerce-untitled/api/v1/variants?productId=${productId}`,
       });
     },
