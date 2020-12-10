@@ -68,16 +68,35 @@ class VariantsController extends Controller
         foreach ($variants as $variant) {
             $data[] = [
                 ...[$variant->sku, $variant->stock, $variant->price],
-                ...array_map(function($field) use($variant) {
-                    return ($variant instanceof Element) ?
-                        $variant->{$field}[0]->title :
-                        $variant->{$field};
-                }, $fields)
+                ...$this->_getVariantFieldValues($variant, $fields)
             ];
         }
 
         return $this->asJson([
             'data' => $data,
         ]);
+    }
+
+    /**
+     * Helper function to return field values for a variant
+     * @author Josh Smith <josh@batch.nz>
+     * @param  Variant $variant
+     * @param  array $fields
+     * @return array
+     */
+    private function _getVariantFieldValues(Variant $variant, array $fields): array
+    {
+        return array_map(function($field) use($variant) {
+            if( !is_array($variant->$field) ){
+                $variant->$field = [$variant->$field];
+            };
+
+            // Return element titles or just the value
+            $values = array_map(function($value){
+                return $value instanceof Element ? $value->title : $value;
+            }, $variant->$field);
+
+            return implode(', ', $values);
+        }, $fields) ?? [];
     }
 }
