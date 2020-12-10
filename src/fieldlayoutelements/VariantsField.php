@@ -47,7 +47,7 @@ class VariantsField extends CommerceVariantsField
         }
 
         return <<<EOT
- <table id="configurable-variants">
+ <table id="configurable-variants" class="data">
   <thead>
     <tr>
       <th>SKU</th>

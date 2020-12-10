@@ -69,16 +69,13 @@ class CraftCommerceUntitledAsset extends AssetBundle
         // Load the correct webpack files
         if( Craft::$app->getConfig()->general->devMode && $this->hasDevServer() ){
             $this->js[] = ManifestHelper::getModule($twigpackConfig, 'app.js');
+        // Use production files
         } else {
-            $this->js[] = 'js/app.js'; // strstr(ManifestHelper::getModule($twigpackConfig, 'app.js'), 'js/');
-            $this->js[] = 'js/runtime.js';  //strstr(ManifestHelper::getModule($twigpackConfig, 'runtime.js'), 'js/');
-            $this->js[] = 'js/vendors.js';  //strstr(ManifestHelper::getModule($twigpackConfig, 'vendors.js'), 'js/');
+            $this->js[] = 'js/app.js';
+            $this->js[] = 'js/runtime.js';
+            $this->js[] = 'js/vendors.js';
+            $this->css[] = 'css/app.css';
         }
-
-        $this->css = [
-            'libs/DataTables/datatables.min.css',
-            'css/CraftCommerceUntitled.css',
-        ];
 
         parent::init();
     }

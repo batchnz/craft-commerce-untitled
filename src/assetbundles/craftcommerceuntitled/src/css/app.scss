@@ -1,0 +1,71 @@
+/**
+ * Craft Commerce Untitled plugin for Craft CMS
+ *
+ * Craft Commerce Untitled CSS
+ *
+ * @author    Josh Smith
+ * @copyright Copyright (c) 2020 Josh Smith
+ * @link      https://www.batch.nz
+ * @package   CraftCommerceUntitled
+ * @since     1.0.0
+ */
+@use './node_modules/craftcms-sass/mixins';
+
+.icon.nav:before {
+    content: "menu";
+}
+
+.paginate_button,
+.ellipsis {
+    margin-left: 8px;
+}
+.paginate_button {
+    padding: 12px 16px;
+}
+
+.dataTable {
+    width: 100%;
+}
+
+.dataTables_info,
+.dataTables_length {
+    float: left;
+}
+
+.dataTables_paginate,
+.dataTables_filter {
+    float: right;
+}
+
+.dataTables_length,
+.dataTables_filter {
+    margin: 16px 0;
+}
+
+.dataTables_length {
+    label {
+        position: relative;
+        display: flex;
+        align-items: center;
+        &:after {
+            right: calc(100% - 60%) !important;
+            @include mixins.select-arrow-styles;
+        }
+    }
+    select {
+        @include mixins.select-styles;
+        @include mixins.select-input-styles;
+        margin: 0 5px;
+    }
+}
+
+.dataTables_filter {
+    &__input {
+        margin-left: 5px;
+    }
+}
+
+.dataTables_info,
+.dataTables_paginate {
+    margin-top: 24px;
+}

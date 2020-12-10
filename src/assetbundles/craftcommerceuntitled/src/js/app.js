@@ -14,7 +14,17 @@ import Vue from "vue";
 import store from "./store";
 import App from "./components/App.vue";
 
+import "../css/app.scss";
+
 (function ($) {
+  // Set datatables classes
+  $.fn.dataTable.ext.classes.sPageButton = `${$.fn.dataTable.ext.classes.sPageButton} btn`;
+  $.fn.dataTable.ext.classes.sPageButtonActive = `active`;
+  $.fn.dataTable.ext.classes.sFilterInput = "text dataTables_filter__input";
+  $.fn.dataTable.ext.classes.sSortAsc = "ordered asc";
+  $.fn.dataTable.ext.classes.sSortColumn = "ordered";
+  $.fn.dataTable.ext.classes.sSortDesc = "ordered desc";
+
   /**
    * The main plugin object
    * Responsible for setting up the variant configuration interactivity
@@ -63,7 +73,7 @@ import App from "./components/App.vue";
     initDataTables() {
       const productId = this.settings.productId;
       $("#configurable-variants").DataTable({
-        pageLength: "25",
+        pageLength: 25,
         ajax: `/craft-commerce-untitled/api/v1/variants?productId=${productId}`,
       });
     },

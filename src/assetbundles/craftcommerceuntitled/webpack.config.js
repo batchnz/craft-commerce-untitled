@@ -1,26 +1,37 @@
 const { VueLoaderPlugin } = require("vue-loader");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ManifestPlugin = require("webpack-manifest-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
 const path = require("path");
 
-const configurePlugins = (options) => {
+const configurePlugins = (mode) => {
   const plugins = [
     new VueLoaderPlugin(),
     new ManifestPlugin(configureManifest("manifest.json")),
   ];
 
-  if (options.mode === "development") {
+  if (mode === "development") {
     plugins.push(new webpack.HotModuleReplacementPlugin());
   }
 
-  if (options.mode === "production") {
+  if (mode === "production") {
     plugins.push(
       new CleanWebpackPlugin({
         cleanOnceBeforeBuildPatterns: [
           path.resolve(__dirname, "dist/js/"),
+          path.resolve(__dirname, "dist/css/"),
           path.resolve(__dirname, "dist/manifest.json"),
         ],
+      })
+    );
+    plugins.push(
+      new MiniCssExtractPlugin({
+        filename: path.join(
+          "./css",
+          mode === "development" ? "[name].[hash].css" : "[name].css"
+        ),
+        ignoreOrder: true,
       })
     );
   }
@@ -39,15 +50,15 @@ const configureManifest = (fileName) => {
   };
 };
 
-const configurePublicPath = (options) => {
-  if (options.mode === "development") {
+const configurePublicPath = (mode) => {
+  if (mode === "development") {
     return (process.env.DEVSERVER_PUBLIC || "http://localhost:8080") + "/";
   }
 
   return process.env.PUBLIC_PATH || "/dist/";
 };
 
-module.exports = (env, options) => {
+module.exports = (env, { mode = "development" }) => {
   return {
     entry: {
       app: path.resolve(__dirname, "src/js/app.js"),
@@ -55,9 +66,9 @@ module.exports = (env, options) => {
     output: {
       filename: path.join(
         "./js",
-        `[name]${options.mode === "development" ? `.[hash]` : ``}.js`
+        mode === "development" ? "[name].[hash].js" : "[name].js"
       ),
-      publicPath: configurePublicPath(options),
+      publicPath: configurePublicPath(mode),
       path: path.resolve(__dirname, "dist/"),
     },
     module: {
@@ -73,20 +84,30 @@ module.exports = (env, options) => {
           test: /\.vue$/,
           loader: "vue-loader",
         },
+        {
+          test: /\.s[ac]ss$/i,
+          use: [
+            mode === "development"
+              ? "style-loader"
+              : MiniCssExtractPlugin.loader,
+            "css-loader",
+            "sass-loader",
+          ],
+        },
       ],
     },
-    plugins: configurePlugins(options),
+    plugins: configurePlugins(mode),
     resolve: {
       alias: {
         vue$:
-          options.mode === "development"
+          mode === "development"
             ? "vue/dist/vue.esm.js"
             : "vue/dist/vue.runtime.esm.js",
       },
       extensions: ["*", ".js", ".vue", ".json"],
     },
     optimization:
-      options.mode === "development"
+      mode === "development"
         ? {}
         : {
             moduleIds: "hashed",

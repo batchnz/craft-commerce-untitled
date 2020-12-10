@@ -21,18 +21,15 @@
             "homepage": "https://www.batch.nz"
         }
     ],
-    "require": {
-        "craftcms/cms": "^3.5",
-        "nystudio107/craft-twigpack": "^1.2"
-    },
     "require-dev": {
-      "craftcms/cms": "^3.5",
-      "codeception/codeception": "^3.0",
-      "vlucas/phpdotenv": "^3.0"
+        "craftcms/cms": "^3.5",
+        "codeception/codeception": "^3.0",
+        "vlucas/phpdotenv": "^3.0",
+        "nystudio107/craft-twigpack": "^1.2"
     },
     "autoload": {
         "psr-4": {
-          "batchnz\\craftcommerceuntitled\\": "src/"
+            "batchnz\\craftcommerceuntitled\\": "src/"
         }
     },
     "extra": {
