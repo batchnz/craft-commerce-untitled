@@ -68,6 +68,7 @@ export const valuesStep = {
 
 /**
  * Returns dynamically generated settings type rules (e.g. rules for price, stock or sku)
+ * We use lazy validation to ensure the store has loaded (circular dependency) before validation rules are generated
  *
  * @author Josh Smith <josh@batch.nz>
  * @param  array    settingsTypes
@@ -90,18 +91,11 @@ export const getSettingsTypeRules = (settingsTypes = TYPES) => {
       [VALUES]: object()
         .when("method", {
           is: "field",
-          then: lazy(() => getLazySettingsFieldRules(type)),
+          then: lazy(() => getSettingsMethodFieldRules(type)),
         })
         .when(METHOD, {
           is: "all",
-          then: lazy((obj) =>
-            object({
-              value: number()
-                .typeError("Please enter a number")
-                .required("Please enter a value")
-                .min(0, "Please enter a value greater than 0"),
-            })
-          ),
+          then: lazy(() => getSettingsMethodAllRules(type)),
         })
         .nullable(),
     });
@@ -110,14 +104,14 @@ export const getSettingsTypeRules = (settingsTypes = TYPES) => {
 };
 
 /**
- * Returns dynamically generated validation rules for each settings rule
+ * Returns dynamically generated validation rules for each settings rule for the field method
  * Note: this is tightly coupled with the store to generate rules for the selected field handle and values
  *
  * @author Josh Smith <josh@batch.nz>
  * @param  string type
  * @return object
  */
-const getLazySettingsFieldRules = (type) => {
+const getSettingsMethodFieldRules = (type) => {
   const rules = {};
 
   const settings = store.getters.settingsByType(type);
@@ -148,6 +142,34 @@ const getLazySettingsFieldRules = (type) => {
   });
 
   return object(rules);
+};
+
+/**
+ * Returns dynamically generated validation rules for the 'all' settings method
+ * @author Josh Smith <josh@batch.nz>
+ * @param  string   type
+ * @return object
+ */
+const getSettingsMethodAllRules = (type) => {
+  switch (type) {
+    case "price":
+    case "stock":
+    default:
+      return object({
+        value: number()
+          .typeError("Please enter a number")
+          .required("Please enter a value")
+          .min(0, "Please enter a value greater than 0"),
+      });
+    case "sku":
+      return object({
+        value: string()
+          .typeError("Please enter a number")
+          .required("Please enter a value")
+          .min(0, "Please enter a value greater than 0")
+          .nullable(),
+      });
+  }
 };
 
 export const settingsStep = {
