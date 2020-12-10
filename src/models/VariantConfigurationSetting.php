@@ -46,6 +46,11 @@ class VariantConfigurationSetting extends Model
         return $variantQuery;
     }
 
+    /**
+     * Validation Rules
+     * @author Josh Smith <josh@batch.nz>
+     * @return array
+     */
     public function rules()
     {
         $rules = parent::rules();
