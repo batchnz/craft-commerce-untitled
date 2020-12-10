@@ -63,6 +63,7 @@ import App from "./components/App.vue";
     initDataTables() {
       const productId = this.settings.productId;
       $("#configurable-variants").DataTable({
+        pageLength: "25",
         serverMethod: "post",
         ajax: `https://www.naturalpaintco001.batch/craft-commerce-untitled/api/v1/variants?productId=${productId}`,
       });
