@@ -19,6 +19,7 @@ use Craft;
 use craft\base\Component;
 use craft\events\ModelEvent;
 use craft\events\TemplateEvent;
+use craft\web\View;
 
 use craft\commerce\elements\Product as CommerceProduct;
 
@@ -46,6 +47,9 @@ class Products extends Component
         // Only run this method on the _edit template
         if( $e->template !== 'commerce/products/_edit' ) return;
 
+        $view = Craft::$app->getView();
+        $scripts = $view->js[View::POS_READY];
+
         $product = $e->variables['product'];
         $productType = $e->variables['productType'];
 
@@ -60,6 +64,13 @@ class Products extends Component
 
         $e->variables['tabs'] = $form->getTabMenu();
         $e->variables['fieldsHtml'] = $form->render();
+
+        // Hack alert!
+        // Calling `$configurableProductType->getProductFieldLayout()->createForm($product);` will duplicate
+        // any scripts registered during the fieldlayoutelement HTML generation. As we're simply replacing
+        // Variant Fields with our own extended version, we can reset the scripts array to the original.
+        // This is required as we can't override the `_prepEditProductVariables()` method in the products controller as it's private.
+        $view->js[View::POS_READY] = $scripts;
     }
 
     /**
