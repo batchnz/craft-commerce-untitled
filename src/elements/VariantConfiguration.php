@@ -26,6 +26,7 @@ use craft\fields\BaseRelationField;
 use craft\fields\Categories as CategoriesField;
 use craft\helpers\Json;
 use craft\validators\ArrayValidator;
+use craft\web\View;
 
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\elements\Product;
@@ -533,14 +534,14 @@ class VariantConfiguration extends Element
      * @param  array  $fieldValues An array of values keyed by field handles
      * @return mixed
      */
-    public function normalizeSettingsValue($type, $fieldValues = [])
+    public function normalizeSettingsValue($type, $values = [])
     {
         $settings = $this->settings[$type] ?? null;
         if( empty($settings) ) return null;
 
         switch ($settings->method) {
             case 'field':
-                $elementId = $fieldValues[$settings->field] ?? null;
+                $elementId = $values[$settings->field] ?? null;
                 $value = $settings->values[$elementId] ?? null;
                 break;
 
@@ -553,6 +554,18 @@ class VariantConfiguration extends Element
                 $value = null;
                 break;
         }
+
+        // Fetch element titles to use in the object template
+        $variables = [];
+        foreach ($values as $handle => $elementId) {
+            $element = Craft::$app->getElements()->getElementById($elementId);
+            $variables[$handle] = str_replace(' ', '-', $element->title);
+        }
+
+        // Render the element title into the value string
+        $value = Craft::$app
+            ->getView()
+            ->renderObjectTemplate($value, $this, $variables, View::TEMPLATE_MODE_CP);
 
         return $value;
     }
