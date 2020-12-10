@@ -16,6 +16,7 @@ use batchnz\craftcommerceuntitled\helpers\VariantConfiguration as VariantConfigu
 
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\elements\Variant;
+use craft\commerce\helpers\Currency as CurrencyHelper;
 
 use Craft;
 use craft\elements\db\Element;
@@ -54,6 +55,10 @@ class VariantsController extends Controller
         $product = Commerce::getInstance()->getProducts()->getProductById($productId);
         if( empty($product) ) throw new NotFoundHttpException();
 
+        // Get the main currency
+        $currency = Commerce::getInstance()->getPaymentCurrencies()->getPrimaryPaymentCurrency();
+        if( empty($currency) ) throw new NotFoundHttpException();
+
         // Fetch the fields on the variant field layout
         $variantFieldLayout = $product->getType()->getVariantFieldLayout();
         $fields = array_column($variantFieldLayout->getFields(), 'handle');
@@ -67,7 +72,11 @@ class VariantsController extends Controller
         $data = [];
         foreach ($variants as $variant) {
             $data[] = [
-                ...[$variant->sku, $variant->stock, $variant->price],
+                ...[
+                    $variant->sku,
+                    $variant->stock,
+                    CurrencyHelper::formatAsCurrency($variant->price, $currency)
+                ],
                 ...$this->_getVariantFieldValues($variant, $fields)
             ];
         }
