@@ -1,7 +1,10 @@
 <template>
   <div class="field">
     <div class="heading">
-      <label>{{ settingsTitle }}</label>
+      <label>{{ typeTitle }}</label>
+      <div class="instructions">
+        {{ typeInstructions }}
+      </div>
     </div>
     <div class="input ltr">
       <fieldset>
@@ -15,14 +18,14 @@
             v-model="method"
           />
           <label :for="'settings-' + type + '-all'"
-            >Set {{ type }} for all variants</label
+            >Set {{ typeTitle }} for all variants</label
           >
         </div>
 
         <!-- Set all values per field -->
         <div v-if="method === 'all'" class="field" style="margin-left: 32px">
           <div class="heading">
-            <label>{{ settingsTitle }}</label>
+            <label>{{ typeTitle }}</label>
           </div>
           <div class="input ltr">
             <!-- Prefix with a $ -->
@@ -59,7 +62,7 @@
             v-model="method"
           />
           <label :for="'settings-' + type + '-field'"
-            >Set {{ type }} per field</label
+            >Set {{ typeTitle }} per field</label
           >
         </div>
 
@@ -129,7 +132,9 @@
             value="skip"
             v-model="method"
           />
-          <label :for="'settings-' + type + '-skip'">Skip {{ type }}</label>
+          <label :for="'settings-' + type + '-skip'"
+            >Skip {{ typeTitle }}</label
+          >
         </div>
       </fieldset>
       <ul class="errors" v-if="errors[`settings.${type}.method`]">
@@ -164,8 +169,20 @@ export default {
       selectedFields: "selectedFields",
       selectedValuesByHandle: "selectedOptionsByFieldHandle",
     }),
-    settingsTitle() {
-      return this.type.charAt(0).toUpperCase() + this.type.slice(1);
+    typeTitle() {
+      const typeTitle = Craft.t("craft-commerce-untitled", this.type);
+      return typeTitle.charAt(0).toUpperCase() + typeTitle.slice(1);
+    },
+    typeInstructions() {
+      switch (this.type) {
+        case "sku":
+          return `Use ${this.templateVars} to dynamically set ${this.typeTitle} from field values`;
+        default:
+          return "";
+      }
+    },
+    templateVars() {
+      return this.selectedFields.map((field) => `{${field.handle}}`).join(", ");
     },
     [SETTINGS.METHOD]: {
       get() {
