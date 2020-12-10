@@ -70,9 +70,9 @@ class CraftCommerceUntitledAsset extends AssetBundle
         if( Craft::$app->getConfig()->general->devMode && $this->hasDevServer() ){
             $this->js[] = ManifestHelper::getModule($twigpackConfig, 'app.js');
         } else {
-            $this->js[] = strstr(ManifestHelper::getModule($twigpackConfig, 'app.js'), 'js/');
-            $this->js[] = strstr(ManifestHelper::getModule($twigpackConfig, 'runtime.js'), 'js/');
-            $this->js[] = strstr(ManifestHelper::getModule($twigpackConfig, 'vendors.js'), 'js/');
+            $this->js[] = 'js/app.js'; // strstr(ManifestHelper::getModule($twigpackConfig, 'app.js'), 'js/');
+            $this->js[] = 'js/runtime.js';  //strstr(ManifestHelper::getModule($twigpackConfig, 'runtime.js'), 'js/');
+            $this->js[] = 'js/vendors.js';  //strstr(ManifestHelper::getModule($twigpackConfig, 'vendors.js'), 'js/');
         }
 
         $this->css = [

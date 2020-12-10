@@ -1,5 +1,5 @@
 {
-  "app.js": "/dist/js/app.54fb78a15c8370e2745e.js",
-  "runtime.js": "/dist/js/runtime.54fb78a15c8370e2745e.js",
-  "vendors.js": "/dist/js/vendors.54fb78a15c8370e2745e.js"
+  "app.js": "/dist/js/app.js",
+  "runtime.js": "/dist/js/runtime.js",
+  "vendors.js": "/dist/js/vendors.js"
 }
