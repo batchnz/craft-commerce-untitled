@@ -36,6 +36,7 @@ import "../css/app.scss";
       productTypeId: null,
       variantConfigurationTypeId: null,
     },
+    $dt: $(),
 
     /**
      * Initialises this object
@@ -66,13 +67,25 @@ import "../css/app.scss";
           productId: this.settings.productId,
           productTypeId: this.settings.productTypeId,
           variantConfigurationTypeId: this.settings.variantConfigurationTypeId,
+          // Destroy the Vue instance and reload datatables data
+          onClose: (vm) => {
+            vm.$destroy();
+            store.dispatch("resetForm");
+            this.$dt.ajax.reload();
+          },
         });
       });
     },
 
+    /**
+     * Intialises the main variants data table
+     * @author Josh Smith <hey@joshthe.dev>
+     * @return void
+     */
     initDataTables() {
       const productId = this.settings.productId;
-      $("#configurable-variants").DataTable({
+      this.$dt = $("#configurable-variants").DataTable({
+        autoWidth: false,
         ajax: `/craft-commerce-untitled/api/v1/variants?productId=${productId}`,
       });
     },
@@ -96,6 +109,7 @@ import "../css/app.scss";
       productId: null,
       productTypeId: null,
       variantConfigurationTypeId: null,
+      onClose: () => {},
     },
     closeOtherModals: true,
     shadeClass: "modal-shade dark",
@@ -131,8 +145,7 @@ import "../css/app.scss";
 
       // Destroy the Vue instance when hidden
       this.on("hide", () => {
-        vm.$destroy();
-        store.dispatch("resetForm");
+        this.settings.onClose(vm);
       });
 
       this.base(this.$container, settings);
