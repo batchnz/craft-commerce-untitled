@@ -65,42 +65,50 @@ class VariantConfigurations extends Component
         $permutation = $configuration->getVariantPermutations();
 
         $fields = [];
-        foreach ($permutation as $fieldValues) {
+        foreach ($permutation as $i => $fieldValues) {
             // Transform values in the permutation
             foreach ($fieldValues as $handle => $value) {
                 $field = $configuration->getFieldByHandle($handle);
 
-                // Assign the value
-                $fields[$handle] = $value;
-
                 // Relation fields require the value to be an array
                 if( $field instanceof BaseRelationField ){
-                    $fields[$handle] = [$value];
+                    $value = [$value];
                 }
+
+                // Assign the value
+                $fields[$i][$handle] = $value;
             }
         }
 
         // Delete existing variants
-        foreach ($fields as $field => $values) {
-            $matchingVariants = Variant::find()->{$field}($values)->all();
-            foreach ($matchingVariants as $variant) {
-                Craft::$app->getElements()->deleteElement($variant, true);
+        foreach ($fields as $field) {
+            foreach ($field as $fieldHandle => $values) {
+                $matchingVariants = Variant::find()->{$fieldHandle}($values)->all();
+                foreach ($matchingVariants as $variant) {
+                    Craft::$app->getElements()->deleteElement($variant, true);
+                }
             }
         }
 
         // Create new Variants
-        foreach ($permutation as $fieldValues) {
+        $skus = [];
+        foreach ($permutation as $i => $fieldValues) {
             // Normalize variant attributes
-            $price = $configuration->normalizeSettingsValue('price', $fieldValues) ?? 0.00;
             $stock = $configuration->normalizeSettingsValue('stock', $fieldValues) ?? null;
-            $sku = $configuration->normalizeSettingsValue('sku', $fieldValues) ?? '';
+            $price = $configuration->normalizeSettingsValue('price', $fieldValues) ?? 0.00;
+            $skus[] = $sku = $configuration->normalizeSettingsValue('sku', $fieldValues) ?? '';
+
+            // Postfix duplicate SKUs e.g. mysku-1, mysku-2 etc...
+            if( $dups = array_diff_key($skus, array_unique($skus)) ){
+                $sku = $sku . '-' . count($dups);
+            }
 
             $variantData = [
                 'price' => $price,
                 'stock' => $stock,
                 'minQty' => null,
                 'maxQty' => null,
-                'fields' => $fields,
+                'fields' => $fields[$i],
                 'sku' => $sku
             ];
 
