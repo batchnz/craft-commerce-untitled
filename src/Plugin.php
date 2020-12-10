@@ -373,7 +373,7 @@ class Plugin extends CraftPlugin
         // We use this event to re-route product edit routes to our custom controller
         // This allows us to limit the number of variants loaded against a product
         Event::on(Plugins::class, Plugins::EVENT_AFTER_LOAD_PLUGINS, function(Event $event){
-            if( ! Craft::$app->getRequest()->getIsSiteRequest() ) return;
+            if( ! Craft::$app->getRequest()->getIsCpRequest() ) return;
             $urlManager = Craft::$app->getUrlManager();
             $urlManager->addRules([
                 'commerce/products/<productTypeHandle:{handle}>/new/<siteHandle:{handle}>' => $this->id . '/products/edit-product',
