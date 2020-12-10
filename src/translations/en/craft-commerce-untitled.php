@@ -21,5 +21,7 @@
  * @since     1.0.0
  */
 return [
-    'Craft Commerce Untitled plugin loaded' => 'Craft Commerce Untitled plugin loaded',
+    'price' => 'price',
+    'stock' => 'stock',
+    'sku' => 'SKU',
 ];

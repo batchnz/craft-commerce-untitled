@@ -10,11 +10,14 @@
 
 namespace batchnz\craftcommerceuntitled\assetbundles\craftcommerceuntitled;
 
+use batchnz\craftcommerceuntitled\Plugin;
+
 use nystudio107\twigpack\helpers\Manifest as ManifestHelper;
 
 use Craft;
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
+use craft\web\View;
 
 use yii\web\JqueryAsset;
 
@@ -78,6 +81,22 @@ class CraftCommerceUntitledAsset extends AssetBundle
         ];
 
         parent::init();
+    }
+
+     /**
+     * @inheritdoc
+     */
+    public function registerAssetFiles($view)
+    {
+        parent::registerAssetFiles($view);
+
+        if ($view instanceof View) {
+            $view->registerTranslations(Plugin::getInstance()->id, [
+                'price',
+                'stock',
+                'sku',
+            ]);
+        }
     }
 
     /**
