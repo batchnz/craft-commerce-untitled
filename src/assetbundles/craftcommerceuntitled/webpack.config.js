@@ -53,7 +53,10 @@ module.exports = (env, options) => {
       app: path.resolve(__dirname, "src/js/app.js"),
     },
     output: {
-      filename: path.join("./js", "[name].[hash].js"),
+      filename: path.join(
+        "./js",
+        `[name].${options.mode === "development" ? `[hash]` : ``}.js`
+      ),
       publicPath: configurePublicPath(options),
       path: path.resolve(__dirname, "dist/"),
     },
