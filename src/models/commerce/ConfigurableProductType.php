@@ -31,7 +31,7 @@ class ConfigurableProductType extends CommerceProductType
      */
     public function getProductFieldLayout(): FieldLayout
     {
-        $fieldLayout = parent::getFieldLayout();
+        $fieldLayout = parent::getProductFieldLayout();
 
         // Loop tabs that exist on this product field layout
         foreach ($fieldLayout->getTabs() as &$tab) {
