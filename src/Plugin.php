@@ -367,6 +367,8 @@ class Plugin extends CraftPlugin
          * variants on to the product element within the Product::EVENT_BEFORE_SAVE event.
          */
         Craft::$app->on(Application::EVENT_INIT, function() {
+            if( ! Craft::$app->getRequest()->getIsCpRequest() ) return;
+
             $actionSegments = $this->request->getActionSegments();
             if( empty($actionSegments) ) return;
 
