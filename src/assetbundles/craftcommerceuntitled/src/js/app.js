@@ -12,6 +12,7 @@
 
 import Vue from "vue";
 import store from "./store";
+import Api from "./api";
 import App from "./components/App.vue";
 
 import "../css/app.scss";
@@ -35,6 +36,7 @@ import "../css/app.scss";
       productId: null,
       productTypeId: null,
       variantConfigurationTypeId: null,
+      productVariantType: "standard",
     },
     $dt: $(),
 
@@ -47,8 +49,15 @@ import "../css/app.scss";
     init(settings) {
       const self = this;
       this.settings = $.extend({}, Craft.CommerceUntitled.defaults, settings);
-      this.initEditBtn();
-      this.initDataTables();
+
+      // Setup the configurable product
+      if (this.settings.productVariantType !== "standard") {
+        this.initEditBtn();
+        this.initDataTables();
+      }
+
+      // Handle the product variant type select change event
+      this.handleVariantTypeChange();
     },
 
     /**
@@ -88,6 +97,23 @@ import "../css/app.scss";
         autoWidth: false,
         ajax: `/craft-commerce-untitled/api/v1/variants?productId=${productId}`,
       });
+    },
+
+    /**
+     * Handles the change of the variant type select menu
+     * @author Josh Smith <josh@batch.nz>
+     * @return void
+     */
+    handleVariantTypeChange() {
+      const productId = this.settings.productId;
+      $("#variant-type-field")
+        .find("select")
+        .on("change", (e) => {
+          const variantType = e.target.value;
+          Api.saveProductVariantType(productId, { variantType }).then(() => {
+            window.location.reload();
+          });
+        });
     },
 
     /**

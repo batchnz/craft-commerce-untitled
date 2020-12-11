@@ -64,39 +64,26 @@ class VariantConfigurations extends Component
         $product = $configuration->getProduct();
         $permutation = $configuration->getVariantPermutations();
 
-        $fields = [];
-        foreach ($permutation as $i => $fieldValues) {
-            // Transform values in the permutation
-            foreach ($fieldValues as $handle => $value) {
-                $field = $configuration->getFieldByHandle($handle);
-
-                // Relation fields require the value to be an array
-                if( $field instanceof BaseRelationField ){
-                    $value = [$value];
-                }
-
-                // Assign the value
-                $fields[$i][$handle] = $value;
-            }
-        }
-
-        // Delete existing variants
-        foreach ($fields as $field) {
-            foreach ($field as $fieldHandle => $values) {
-                $matchingVariants = Variant::find()->{$fieldHandle}($values)->all();
-                foreach ($matchingVariants as $variant) {
-                    Craft::$app->getElements()->deleteElement($variant, true);
-                }
-            }
-        }
-
-        // Create new Variants
         $skus = [];
+        $savedVariantIds = [];
         foreach ($permutation as $i => $fieldValues) {
+
             // Normalize variant attributes
-            $stock = $configuration->normalizeSettingsValue('stock', $fieldValues) ?? null;
             $price = $configuration->normalizeSettingsValue('price', $fieldValues) ?? 0.00;
+            $stock = $configuration->normalizeSettingsValue('stock', $fieldValues) ?? null;
             $skus[] = $sku = $configuration->normalizeSettingsValue('sku', $fieldValues) ?? '';
+
+            // Normalzie variant field values
+            $fields = $configuration->normalizeVariantFieldValues($fieldValues);
+
+            // Fetch existing variants that match this configuration
+            $configurationVariantIds = $configuration->variants ?? [];
+            $existingVariantIds = Variant::find()->where(['in', 'commerce_variants.id', $configurationVariantIds])->ids();
+
+            // Delete.
+            foreach ($existingVariantIds as $elementId) {
+                Craft::$app->getElements()->deleteElementById($elementId, null, null, true);
+            }
 
             // Postfix duplicate SKUs e.g. mysku-1, mysku-2 etc...
             if( $dups = array_diff_key($skus, array_unique($skus)) ){
@@ -108,7 +95,7 @@ class VariantConfigurations extends Component
                 'stock' => $stock,
                 'minQty' => null,
                 'maxQty' => null,
-                'fields' => $fields[$i],
+                'fields' => $fields,
                 'sku' => $sku
             ];
 
@@ -117,6 +104,12 @@ class VariantConfigurations extends Component
 
             // Save the variant
             Craft::$app->getElements()->saveElement($variant);
+
+            $savedVariantIds[] = $variant->id;
         }
+
+        // Update the list of variants stored against this configuration and save
+        $configuration->variants = $savedVariantIds;
+        Craft::$app->getElements()->saveElement($configuration);
     }
 }

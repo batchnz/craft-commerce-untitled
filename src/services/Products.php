@@ -12,6 +12,7 @@ namespace batchnz\craftcommerceuntitled\services;
 
 use batchnz\craftcommerceuntitled\Plugin;
 use batchnz\craftcommerceuntitled\enums\ProductVariantType;
+use batchnz\craftcommerceuntitled\elements\ConfigurableProduct;
 use batchnz\craftcommerceuntitled\models\commerce\ConfigurableProductType;
 use batchnz\craftcommerceuntitled\records\Product;
 
@@ -21,7 +22,9 @@ use craft\events\ModelEvent;
 use craft\events\TemplateEvent;
 use craft\web\View;
 
+use craft\commerce\Plugin as Commerce;
 use craft\commerce\elements\Product as CommerceProduct;
+use craft\commerce\services\Products as CommerceProductsService;
 
 /**
  * Products Service
@@ -30,10 +33,26 @@ use craft\commerce\elements\Product as CommerceProduct;
  * @package   CraftCommerceUntitled
  * @since     1.0.0
  */
-class Products extends Component
+class Products extends CommerceProductsService
 {
     // Public Methods
     // =========================================================================
+
+    public function getProductById(int $id, $siteId = null)
+    {
+        $productConfiguration = Product::find()->where(['id' => $id])->one();
+
+        if( !empty($productConfiguration) && $productConfiguration->variantType === ProductVariantType::Configurable ){
+            $class = ConfigurableProduct::class;
+        } else {
+            $class = CommerceProduct::class;
+        }
+
+        /** @var Product $product */
+        $product = Craft::$app->getElements()->getElementById($id, $class, $siteId);
+
+        return $product;
+    }
 
     /**
      * Handles the before render page template event for product CP page templates
@@ -74,16 +93,32 @@ class Products extends Component
     }
 
     /**
-     * Handles a Commerce Product element save event and updates the plugin's product record
+     * Handles a Commerce Product element after save event and updates the plugin's product record
      * @author Josh Smith <josh@batch.nz>
      * @param  ModelEvent $e
      * @return void
      */
-    public function handleProductSaveEvent(ModelEvent $e)
+    public function handleProductAfterSaveEvent(ModelEvent $e)
     {
         $commerceProduct = $e->sender;
-        $variantType = Craft::$app->getRequest()->getBodyParam('variantType');
+        $variantType = $commerceProduct->getVariantType();
 
+        if( $variantType === '' )
+
+        if( !empty($variantType) ){
+            $this->saveProductVariantType($commerceProduct, $variantType);
+        }
+    }
+
+    /**
+     * Saves a product variant type
+     * @author Josh Smith <josh@batch.nz>
+     * @param  CommerceProduct $commerceProduct
+     * @param  string          $variantType
+     * @return bool
+     */
+    public function saveProductVariantType(CommerceProduct $commerceProduct, string $variantType)
+    {
         // Attempt to fetch an existing record
         $product = Product::findOne($commerceProduct->id);
 
@@ -98,6 +133,6 @@ class Products extends Component
             $product->variantType = $variantType;
         }
 
-        $product->save();
+        return $product->save();
     }
 }

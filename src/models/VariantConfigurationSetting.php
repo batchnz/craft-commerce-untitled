@@ -23,6 +23,48 @@ class VariantConfigurationSetting extends Model
     public $values;
 
     /**
+     * Returns a normalized settings value from an array of fields data
+     * @author Josh Smith <josh@batch.nz>
+     * @param  array  $fields
+     * @return mixed
+     */
+    public function normalizeValue(array $fields)
+    {
+        switch ($this->method) {
+            case 'field':
+                $value = $this->normalizeFieldValue($fields);
+                break;
+
+            case 'all':
+                $value = $this->values['value'] ?? null;
+                break;
+
+            case 'skip':
+            default:
+                $value = null;
+                break;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Normalizes a field value
+     * @author Josh Smith <josh@batch.nz>
+     * @param  array  $fields
+     * @return mixed
+     */
+    protected function normalizeFieldValue(array $fields)
+    {
+        if( !array_key_exists($this->field, $fields) ) return null;
+
+        $elementId = $fields[$this->field] ?? null;
+        $value = $this->values[$elementId] ?? null;
+
+        return $value;
+    }
+
+    /**
      * Returns a variant query to fetch variants that match the configuration settings
      * @author Josh Smith <josh@batch.nz>
      * @return VariantQuery

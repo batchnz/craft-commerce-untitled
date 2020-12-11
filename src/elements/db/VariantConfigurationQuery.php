@@ -79,6 +79,7 @@ class VariantConfigurationQuery extends ElementQuery {
             "$tableName.typeId",
             "$tableName.fields",
             "$tableName.settings",
+            "$tableName.variants",
         ]);
 
         if ($this->typeId) {
@@ -105,6 +106,7 @@ class VariantConfigurationQuery extends ElementQuery {
         try {
             $element->fields = Json::decodeIfJson($element->fields);
             $element->settings = Json::decodeIfJson($element->settings);
+            $element->variants = Json::decodeIfJson($element->variants);
 
             // Populate the variant configuration settings
             if( is_array($element->settings) ){

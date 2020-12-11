@@ -115,6 +115,13 @@ class VariantConfiguration extends Element
      */
     public $settings;
 
+    /**
+     * Variant configuration variants
+     *
+     * @var array
+     */
+    public $variants;
+
     // Private Properties
     // =========================================================================
 
@@ -406,10 +413,10 @@ class VariantConfiguration extends Element
         // Filter out the fields we want
         $baseElementFields = array_intersect_key($baseFields, array_flip($fields));
 
-        // // Add in the variant count
-        // $baseElementFields['numberOfVariants'] = function(){
-        //     return $this->getVariantsCount();
-        // };
+        // Add in the variant count
+        $baseElementFields['numberOfVariants'] = function(){
+            return $this->getVariantsCount();
+        };
 
         $customElementFields = [];
         $customElementFields['values'] = function(){
@@ -497,11 +504,7 @@ class VariantConfiguration extends Element
      */
     public function getVariantsCount(): int
     {
-        $count = 0;
-        foreach ($this->settings as $setting) {
-            $count += $setting->getVariantQuery()->count();
-        }
-        return $count;
+        return count($this->variants ?? []);
     }
 
     /**
@@ -530,35 +533,23 @@ class VariantConfiguration extends Element
     /**
      * Normalizes field values for the settings type
      * @author Josh Smith <josh@batch.nz>
-     * @param  string $type        Type of settings
-     * @param  array  $fieldValues An array of values keyed by field handles
+     * @param  string $type     Type of settings
+     * @param  array  $fields   An array of values keyed by field handles
      * @return mixed
      */
-    public function normalizeSettingsValue($type, $values = [])
+    public function normalizeSettingsValue($type, $fields = [])
     {
         $settings = $this->settings[$type] ?? null;
         if( empty($settings) ) return null;
 
-        switch ($settings->method) {
-            case 'field':
-                $elementId = $values[$settings->field] ?? null;
-                $value = $settings->values[$elementId] ?? null;
-                break;
-
-            case 'all':
-                $value = $settings->values['value'] ?? null;
-                break;
-
-            case 'skip':
-            default:
-                $value = null;
-                break;
-        }
+        // Normalize the settings value
+        $value = $settings->normalizeValue($fields);
 
         // Fetch element titles to use in the object template
         $variables = [];
-        foreach ($values as $handle => $elementId) {
+        foreach ($fields as $handle => $elementId) {
             $element = Craft::$app->getElements()->getElementById($elementId);
+            if( empty($element) ) continue;
             $variables[$handle] = str_replace(' ', '-', $element->title);
         }
 
@@ -568,6 +559,22 @@ class VariantConfiguration extends Element
             ->renderObjectTemplate($value, $this, $variables, View::TEMPLATE_MODE_CP);
 
         return $value;
+    }
+
+    /**
+     * Returns an array of normalized variant field values
+     * @author Josh Smith <josh@batch.nz>
+     * @param  array $fields
+     * @return array
+     */
+    public function normalizeVariantFieldValues(array $fields)
+    {
+        foreach ($fields as $handle => &$value) {
+            if( $this->getFieldByHandle($handle) instanceof BaseRelationField ){
+                $value = [$value];
+            }
+        }
+        return $fields;
     }
 
     /**
@@ -663,6 +670,7 @@ class VariantConfiguration extends Element
             $record->typeId = $this->typeId;
             $record->fields = (empty($this->fields) ? NULL : Json::encode($this->fields));
             $record->settings = (empty($this->settings) ? NULL : Json::encode($this->settings));
+            $record->variants = (empty($this->variants) ? NULL : Json::encode($this->variants));
 
             $record->save(false);
 

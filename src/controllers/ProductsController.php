@@ -5,15 +5,18 @@ namespace batchnz\craftcommerceuntitled\controllers;
 
 use batchnz\craftcommerceuntitled\Plugin;
 use batchnz\craftcommerceuntitled\enums\ProductVariantType;
+use batchnz\craftcommerceuntitled\elements\ConfigurableProduct;
 use batchnz\craftcommerceuntitled\assetbundles\craftcommerceuntitled\CraftCommerceUntitledAsset as CraftCommerceUntitledBundle;
 
 use Craft;
 use craft\base\controller;
+use craft\base\Element;
 
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\controllers\ProductsController as CommerceProductsController;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
+use craft\commerce\helpers\Product as ProductHelper;
 
 use yii\web\Response;
 
@@ -55,14 +58,6 @@ class ProductsController extends CommerceProductsController
             ->getProducts()
             ->getProductById($productId, $variables['site']->id);
 
-        // Run the standard controller if this isn't a configurable variant type
-        if( $product->getVariantType() !== ProductVariantType::Configurable ){
-            return parent::actionEditProduct($productTypeHandle, $productId, $siteHandle);
-        }
-
-        // Prevent the product element from loading all variants
-        $product->setVariants([]);
-
         // Fetch the variant configuration type
         $variantConfigurationType = Plugin::getInstance()
             ->getVariantConfigurationTypes()
@@ -75,8 +70,17 @@ class ProductsController extends CommerceProductsController
         $this->view->registerJs('new Craft.CommerceUntitled({
             productId: ' . $product->id . ',
             productTypeId: ' . $product->typeId . ',
-            variantConfigurationTypeId: ' . $variantConfigurationType->id . '
+            productVariantType: \'' . $product->getVariantType() . '\',
+            variantConfigurationTypeId: ' . $variantConfigurationType->id . ',
         });');
+
+        // Run the standard controller if this isn't a configurable variant type
+        if( $product->getVariantType() !== ProductVariantType::Configurable ){
+            return parent::actionEditProduct($productTypeHandle, $productId, $siteHandle);
+        }
+
+        // Prevent the product element from loading all variants
+        $product->setVariants([]);
 
         // Carry on as normal with a preloaded product
         // This prevents the page from crawling to a halt with a large variant set

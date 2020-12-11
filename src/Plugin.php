@@ -39,9 +39,11 @@ use craft\fields\BaseRelationField;
 use craft\services\Elements;
 use craft\services\Fields;
 use craft\services\Plugins;
+use craft\web\Application;
 use craft\web\View;
 use craft\web\UrlManager;
 
+use craft\commerce\Plugin as Commerce;
 use craft\commerce\models\ProductType;
 use craft\commerce\elements\Product as CommerceProduct;
 use craft\commerce\events\ProductTypeEvent;
@@ -94,7 +96,7 @@ class Plugin extends CraftPlugin
      *
      * @var string
      */
-    public $schemaVersion = '1.0.0';
+    public $schemaVersion = '1.0.1';
 
     /**
      * Set to `true` if the plugin should have a settings view in the control panel.
@@ -296,6 +298,17 @@ class Plugin extends CraftPlugin
             UrlManager::class,
             UrlManager::EVENT_REGISTER_SITE_URL_RULES,
             function (RegisterUrlRulesEvent $event) {
+                // Products Controller
+                $event->rules[] = [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => [
+                        RoutesHelper::getApiRoute('products') => RoutesHelper::getApiController('products')
+                    ],
+                    'extraPatterns' => [
+                        'POST <id:\d+>/types' => 'save-types'
+                    ]
+                ];
+
                 // Variants Controller
                 $event->rules[] = [
                     'class' => 'yii\rest\UrlRule',
@@ -347,9 +360,26 @@ class Plugin extends CraftPlugin
             }
         );
 
-        // Handle Commerce Product element save events
-        Event::on(CommerceProduct::class, Element::EVENT_AFTER_SAVE, function(ModelEvent $e) {
-            $this->getProducts()->handleProductSaveEvent($e);
+        /**
+         * Hack alert!
+         * We can't prevent craft commerce from attempting to save variants via the standard controller
+         * so we're setting the variants body param to an empty array and injecting the current set of
+         * variants on to the product element within the Product::EVENT_BEFORE_SAVE event.
+         */
+        Craft::$app->on(Application::EVENT_INIT, function() {
+            $actionSegments = $this->request->getActionSegments();
+            if( empty($actionSegments) ) return;
+
+            if(
+                count($actionSegments) === 3 &&
+                $actionSegments[0] === 'commerce' &&
+                $actionSegments[1] === 'products' &&
+                $actionSegments[2] === 'save-product'
+            ){
+                $bodyParams = $this->request->getBodyParams();
+                $newBodyParams = array_merge($bodyParams, ['variants' => []]);
+                $this->request->setBodyParams($newBodyParams);
+            }
         });
 
         // Handle Commerce Product Types After Save Event
@@ -374,6 +404,12 @@ class Plugin extends CraftPlugin
         // This allows us to limit the number of variants loaded against a product
         Event::on(Plugins::class, Plugins::EVENT_AFTER_LOAD_PLUGINS, function(Event $event){
             if( ! Craft::$app->getRequest()->getIsCpRequest() ) return;
+
+            // Swap the commerce products service with our own
+            Commerce::getInstance()->set('products', [
+                'class' => ProductsService::class
+            ]);
+
             $urlManager = Craft::$app->getUrlManager();
             $urlManager->addRules([
                 'commerce/products/<productTypeHandle:{handle}>/new/<siteHandle:{handle}>' => $this->id . '/products/edit-product',

@@ -1,3 +1,9 @@
+const POST_HEADERS = {
+  "Content-Type": "application/json",
+  Accept: "application/json",
+  "X-Requested-With": "XMLHttpRequest",
+};
+
 /**
  * Fetches variant configurations from the API
  * @author Josh Smith <josh@batch.nz>
@@ -28,11 +34,7 @@ const generateVariants = async (variantConfigurationId, data = {}) => {
     ),
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-Requested-With": "XMLHttpRequest",
-      },
+      headers: POST_HEADERS,
       body: JSON.stringify(data),
     }
   );
@@ -46,11 +48,22 @@ const generateVariants = async (variantConfigurationId, data = {}) => {
 const saveVariantConfiguration = async (data = {}) => {
   return await fetch(getApiUrl("variant-configurations"), {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "X-Requested-With": "XMLHttpRequest",
-    },
+    headers: POST_HEADERS,
+    body: JSON.stringify(data),
+  });
+};
+
+/**
+ * Saves a product variant type
+ * @author Josh Smith <josh@batch.nz>
+ * @param  int productId
+ * @param  object data
+ * @return Promise
+ */
+const saveProductVariantType = async (productId, data = {}) => {
+  return await fetch(getApiUrl(`products/${productId}/types`), {
+    method: "POST",
+    headers: POST_HEADERS,
     body: JSON.stringify(data),
   });
 };
@@ -77,4 +90,5 @@ export default {
   getVariantConfigurationTypeFields,
   saveVariantConfiguration,
   generateVariants,
+  saveProductVariantType,
 };
