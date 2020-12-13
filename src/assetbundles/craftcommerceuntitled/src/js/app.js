@@ -67,7 +67,7 @@ import "../css/app.scss";
      */
     initEditBtn() {
       const $editBtn = $(this.getEditBtnHtml());
-      $("#header").find(".btngroup").before($editBtn);
+      $("#header").find(".btngroup:first").before($editBtn);
 
       // Attach event handler to trigger the configuration modal
       $editBtn.on("click", (e) => {
