@@ -379,8 +379,10 @@ class Plugin extends CraftPlugin
                 $actionSegments[2] === 'save-product'
             ){
                 $bodyParams = $this->request->getBodyParams();
-                $newBodyParams = array_merge($bodyParams, ['variants' => []]);
-                $this->request->setBodyParams($newBodyParams);
+                if($bodyParams['variantType'] === 'configurable') {
+                    $newBodyParams = array_merge($bodyParams, ['variants' => []]);
+                    $this->request->setBodyParams($newBodyParams);
+                }
             }
         });
 
