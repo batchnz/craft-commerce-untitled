@@ -8,15 +8,16 @@
     </div>
     <div class="input ltr" :class="{ errors: errors.title }">
       <textarea
-        @input="handleInput($event.target.value)"
-        class="nicetext text"
-        id="configuration-name"
-        name="title"
-        rows="1"
-        cols="50"
-        placeholder=""
-        style="min-height: 32px"
-        >{{ title }}</textarea
+          @input="handleInput($event.target.value)"
+          @keydown="handleEnterKey($event)"
+          class="nicetext text"
+          id="configuration-name"
+          name="title"
+          rows="1"
+          cols="50"
+          placeholder=""
+          style="min-height: 32px"
+      >{{ title }}</textarea
       >
       <ul class="errors" v-if="errors.title">
         <li>{{ errors.title }}</li>
@@ -39,12 +40,18 @@ export default {
     ...mapMutations({
       setTitle: SET_VARIANT_CONFIGURATION_TITLE,
     }),
-    ...mapActions(["validate"]),
+    ...mapActions(["validate", "nextStep"]),
     async handleInput(value) {
       const { rules } = nameStep;
       await this.validate({ values: { title: value }, schema: rules });
       this.setTitle(value);
     },
+    handleEnterKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.nextStep();
+      }
+    }
   },
 };
 </script>
