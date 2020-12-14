@@ -18,6 +18,7 @@ use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
 use craft\commerce\helpers\Product as ProductHelper;
 
+use yii\base\Exception;
 use yii\web\Response;
 
 /**
@@ -58,11 +59,17 @@ class ProductsController extends CommerceProductsController
             ->getProducts()
             ->getProductById($productId, $variables['site']->id);
 
+        try {
+            // Fetch the variant configuration type
+            $variantConfigurationType = Plugin::getInstance()
+                ->getVariantConfigurationTypes()
+                ->getVariantConfigurationTypeByProductTypeId($siteProduct->typeId);
 
-        // Fetch the variant configuration type
-        $variantConfigurationType = Plugin::getInstance()
-            ->getVariantConfigurationTypes()
-            ->getVariantConfigurationTypeByProductTypeId($siteProduct->typeId);
+            $variantConfigurationTypeId = $variantConfigurationType->id;
+        } catch (Exception $e) {
+            // This is likely not a configurable product
+            $variantConfigurationTypeId = null;
+        }
 
         // Load the main plugin scripts
         $this->view->registerAssetBundle(CraftCommerceUntitledBundle::class);
@@ -72,7 +79,7 @@ class ProductsController extends CommerceProductsController
             productId: ' . $siteProduct->id . ',
             productTypeId: ' . $siteProduct->typeId . ',
             productVariantType: \'' . $siteProduct->getVariantType() . '\',
-            variantConfigurationTypeId: ' . $variantConfigurationType->id . ',
+            variantConfigurationTypeId: ' . $variantConfigurationTypeId . ',
         });');
 
         // Run the standard controller if this isn't a configurable variant type
