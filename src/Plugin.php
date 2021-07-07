@@ -379,7 +379,7 @@ class Plugin extends CraftPlugin
                 $actionSegments[2] === 'save-product'
             ){
                 $bodyParams = $this->request->getBodyParams();
-                if($bodyParams['variantType'] === 'configurable') {
+                if(isset($bodyParams['variantType']) && $bodyParams['variantType'] === 'configurable') {
                     $newBodyParams = array_merge($bodyParams, ['variants' => []]);
                     $this->request->setBodyParams($newBodyParams);
                 }
