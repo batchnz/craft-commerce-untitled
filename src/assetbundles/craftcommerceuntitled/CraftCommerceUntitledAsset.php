@@ -109,7 +109,7 @@ class CraftCommerceUntitledAsset extends AssetBundle
                 'verify_peer_name' => false,
             ],
         ];
-        $devServerHost = getenv('DEVSERVER_PUBLIC');
+        $devServerHost = getenv('PLUGIN_DEVSERVER');
 
         try {
             $contents = file_get_contents("$devServerHost/manifest.json", false, stream_context_create($arrContextOptions));
