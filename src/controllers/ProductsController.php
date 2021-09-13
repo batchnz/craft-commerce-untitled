@@ -75,11 +75,14 @@ class ProductsController extends CommerceProductsController
         $this->view->registerAssetBundle(CraftCommerceUntitledBundle::class);
         $this->view->registerJs('Craft.CommerceUntitled.pluginHandle = "'.Plugin::getInstance()->id.'";');
         $this->view->registerJs('Craft.CommerceUntitled.apiVersion = "'.Plugin::getInstance()->apiVersion.'";');
+
+        // Set variantConfigurationTypeId to the string null if it is null to prevent syntax errors
+        // as this is registering JavaScript
         $this->view->registerJs('new Craft.CommerceUntitled({
             productId: ' . $siteProduct->id . ',
             productTypeId: ' . $siteProduct->typeId . ',
             productVariantType: \'' . $siteProduct->getVariantType() . '\',
-            variantConfigurationTypeId: ' . $variantConfigurationTypeId . ',
+            variantConfigurationTypeId: ' . ($variantConfigurationTypeId ?: 'null') . ',
         });');
 
         // Run the standard controller if this isn't a configurable variant type
