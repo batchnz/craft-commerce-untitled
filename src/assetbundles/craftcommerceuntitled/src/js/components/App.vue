@@ -44,7 +44,7 @@ export default {
     productTypeId: Number,
     variantConfigurationTypeId: Number,
     $modal: Object,
-    hasDimensions: Boolean,
+    hasDimensions: Number,
   },
   computed: {
     ...mapState({
