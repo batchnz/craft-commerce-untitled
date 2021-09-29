@@ -24,4 +24,5 @@ return [
     'price' => 'price',
     'stock' => 'stock',
     'sku' => 'SKU',
+    'weight' => 'weight',
 ];
