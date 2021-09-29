@@ -28,24 +28,18 @@
             <label>{{ typeTitle }}</label>
           </div>
           <div class="input ltr">
-            <!-- Prefix with a $ -->
-            <div v-if="type === 'price'" class="flex">
-              <div>$</div>
+            <div class="flex">
+              <!-- Prefix price with a $ -->
+              <div v-if="type === 'price'" >$</div>
               <input
                 type="text"
                 class="nicetext text"
                 @input="setFieldValue('value', $event.target.value)"
                 :value="values['value']"
               />
+              <!-- Suffix weight with a g -->
+              <div v-if="type === 'weight'" >g</div>
             </div>
-            <!-- Otherwise, just display a plain input -->
-            <input
-              v-else
-              type="text"
-              class="nicetext text"
-              @input="setFieldValue('value', $event.target.value)"
-              :value="values['value']"
-            />
           </div>
           <ul class="errors" v-if="errors[`settings.${type}.values.value`]">
             <li>{{ errors[`settings.${type}.values.value`] }}</li>
@@ -95,24 +89,18 @@
               <label>{{ label }}</label>
             </div>
             <div class="input ltr">
-              <!-- Prefix with a $ -->
-              <div v-if="type === 'price'" class="flex">
-                <div>$</div>
+              <div class="flex">
+                <!-- Prefix price with a $ -->
+                <div v-if="type === 'price'">$</div>
                 <input
                   type="text"
                   class="nicetext text"
                   @input="setFieldValue(value, $event.target.value)"
                   :value="values[value]"
                 />
+                <!-- Suffix weight with a g -->
+                <div v-if="type === 'weight'">g</div>
               </div>
-              <!-- Otherwise, just display a plain input -->
-              <input
-                v-else
-                type="text"
-                class="nicetext text"
-                @input="setFieldValue(value, $event.target.value)"
-                :value="values[value]"
-              />
             </div>
             <ul
               class="errors"
