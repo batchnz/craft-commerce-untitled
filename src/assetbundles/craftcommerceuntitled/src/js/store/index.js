@@ -8,6 +8,7 @@ import AsyncEventBus from "./asyncEventBus";
 import * as MUTATIONS from "../constants/mutationTypes";
 import * as SETTINGS from "../constants/settingsTypes";
 import {DIMENSIONS_DEPENDANT_TYPES, TYPES} from "../constants/settingsTypes";
+import {ValidationError} from "yup";
 
 Vue.use(Vuex);
 
@@ -539,6 +540,7 @@ export default new Vuex.Store({
         commit(MUTATIONS.SET_FORM_ERRORS, {});
         await schema.validate(values, { abortEarly: false });
       } catch (err) {
+        if (!(err instanceof ValidationError)) throw err;
         if (err.inner) {
           err.inner.forEach((error) => {
             commit(MUTATIONS.SET_FORM_ERRORS, {
