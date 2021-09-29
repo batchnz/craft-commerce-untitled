@@ -25,4 +25,7 @@ return [
     'stock' => 'stock',
     'sku' => 'SKU',
     'weight' => 'weight',
+    'height' => 'height',
+    'width' => 'width',
+    'length' => 'length',
 ];

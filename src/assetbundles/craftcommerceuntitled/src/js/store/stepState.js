@@ -73,13 +73,14 @@ export const valuesStep = {
  * @param  array    settingsTypes
  * @return object
  */
-export const getSettingsTypeRules = (settingsTypes = store ? store.getters.allowedTypes() : []) => {
+export const getSettingsTypeRules = () => {
   const rules = {};
+  const settingsTypes = store.getters.allowedTypes;
   settingsTypes.forEach((type) => {
     rules[type] = object({
       [METHOD]: string()
         .nullable()
-        .required()
+        .required("Please select an option")
         .oneOf(METHOD_TYPES, "Please select an option"),
       [FIELD]: string()
         .when("method", {
@@ -126,6 +127,9 @@ const getSettingsMethodFieldRules = (type) => {
       case "price":
       case "stock":
       case "weight":
+      case "height":
+      case "length":
+      case "width":
       default:
         rules[value] = number()
           .typeError("Please enter a number")
@@ -155,6 +159,9 @@ const getSettingsMethodAllRules = (type) => {
     case "price":
     case "stock":
     case "weight":
+    case "height":
+    case "length":
+    case "width":
     default:
       return object({
         value: number()
@@ -184,7 +191,7 @@ export const settingsStep = {
     priBtnText: "Save Configuration",
   },
   rules: object().shape({
-    settings: getSettingsTypeRules(),
+    settings: lazy(() => getSettingsTypeRules()), // Lazy as it relies on allowedTypes from store
   }),
 };
 

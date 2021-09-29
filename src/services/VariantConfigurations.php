@@ -73,6 +73,10 @@ class VariantConfigurations extends Component
             $stock = $configuration->normalizeSettingsValue('stock', $fieldValues) ?? null;
             $skus[] = $sku = $configuration->normalizeSettingsValue('sku', $fieldValues) ?? '';
             $weight = $configuration->normalizeSettingsValue('weight', $fieldValues) ?? 0.00;
+            $height = $configuration->normalizeSettingsValue('height', $fieldValues) ?? 0.00;
+            $length = $configuration->normalizeSettingsValue('length', $fieldValues) ?? 0.00;
+            $width = $configuration->normalizeSettingsValue('width', $fieldValues) ?? 0.00;
+
 
             // Normalzie variant field values
             $fields = $configuration->normalizeVariantFieldValues($fieldValues);
@@ -99,6 +103,9 @@ class VariantConfigurations extends Component
                 'fields' => $fields,
                 'sku' => $sku,
                 'weight' => $weight,
+                'height' => $height,
+                'length' => $length,
+                'width' => $width,
             ];
 
             // Populate the variant element
