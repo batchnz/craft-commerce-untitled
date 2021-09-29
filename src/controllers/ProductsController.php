@@ -83,6 +83,7 @@ class ProductsController extends CommerceProductsController
             productTypeId: ' . $siteProduct->typeId . ',
             productVariantType: \'' . $siteProduct->getVariantType() . '\',
             variantConfigurationTypeId: ' . ($variantConfigurationTypeId ?: 'null') . ',
+            hasDimensions: ' . $siteProduct->getType()->hasDimensions . ',            
         });');
 
         // Run the standard controller if this isn't a configurable variant type

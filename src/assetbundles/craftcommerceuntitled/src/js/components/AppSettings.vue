@@ -1,5 +1,5 @@
 <template>
-  <div class="field">
+  <div class="field" v-if="!(type === 'weight' && !hasDimensions)">
     <div class="heading">
       <label>{{ typeTitle }}</label>
       <div class="instructions">
@@ -142,6 +142,11 @@ export default {
       type: String,
       required: true,
     },
+
+    hasDimensions: {
+      type: Boolean,
+      required: true,
+    }
   },
   computed: {
     ...mapState({

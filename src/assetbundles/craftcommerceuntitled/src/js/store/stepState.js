@@ -1,6 +1,5 @@
 import store from "./index";
 import {
-  TYPES,
   METHOD_TYPES,
   METHOD,
   FIELD,
@@ -74,7 +73,7 @@ export const valuesStep = {
  * @param  array    settingsTypes
  * @return object
  */
-export const getSettingsTypeRules = (settingsTypes = TYPES) => {
+export const getSettingsTypeRules = (settingsTypes = store ? store.getters.allowedTypes() : []) => {
   const rules = {};
   settingsTypes.forEach((type) => {
     rules[type] = object({
@@ -126,6 +125,7 @@ const getSettingsMethodFieldRules = (type) => {
     switch (type) {
       case "price":
       case "stock":
+      case "weight":
       default:
         rules[value] = number()
           .typeError("Please enter a number")
@@ -154,6 +154,7 @@ const getSettingsMethodAllRules = (type) => {
   switch (type) {
     case "price":
     case "stock":
+    case "weight":
     default:
       return object({
         value: number()

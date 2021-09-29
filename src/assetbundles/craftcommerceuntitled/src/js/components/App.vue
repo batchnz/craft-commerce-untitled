@@ -8,7 +8,7 @@
         />
       </div>
       <AppLoading v-if="isLoading" />
-      <component v-if="!isLoading" :is="state.component" />
+      <component v-if="!isLoading" :is="state.component" v-bind="{hasDimensions: hasDimensions}"/>
     </div>
     <AppFooter
       :isLoading="isLoading"
@@ -44,6 +44,7 @@ export default {
     productTypeId: Number,
     variantConfigurationTypeId: Number,
     $modal: Object,
+    hasDimensions: Boolean,
   },
   computed: {
     ...mapState({
@@ -63,6 +64,7 @@ export default {
     this.setProductId(this.productId);
     this.setProductTypeId(this.productTypeId);
     this.setTypeId(this.variantConfigurationTypeId);
+    this.setHasDimensions(this.hasDimensions);
 
     await this.fetchVariantConfigurations({
       productId: this.productId,
@@ -84,6 +86,7 @@ export default {
       setProductId: MUTATIONS.SET_PRODUCT_ID,
       setProductTypeId: MUTATIONS.SET_PRODUCT_TYPE_ID,
       setTypeId: MUTATIONS.SET_TYPE_ID,
+      setHasDimensions: MUTATIONS.SET_HAS_DIMENSIONS,
     }),
     handleCloseModal() {
       this.$modal.hide();

@@ -92,6 +92,7 @@ class CraftCommerceUntitledAsset extends AssetBundle
                 'price',
                 'stock',
                 'sku',
+                'weight',
             ]);
         }
     }

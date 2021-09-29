@@ -17,5 +17,6 @@ export const METHOD = "method";
 export const FIELD = "field";
 export const VALUES = "values";
 
-export const TYPES = [TYPE_PRICE, TYPE_STOCK, TYPE_SKU, TYPE_WEIGHT];
+export const TYPES = [TYPE_PRICE, TYPE_STOCK, TYPE_SKU];
+export const DIMENSIONS_DEPENDANT_TYPES = [TYPE_WEIGHT];
 export const METHOD_TYPES = ["all", "skip", "field"];
