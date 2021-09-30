@@ -53,6 +53,12 @@ class VariantsField extends CommerceVariantsField
       <th>SKU</th>
       <th>Quantity</th>
       <th>Price</th>
+      <th>MinQty</th>      
+      <th>MaxQty</th> 
+      <th>Weight</th>
+      <th>Width</th>
+      <th>Height</th>
+      <th>Length</th>    
       {$columns}
     </tr>
   </thead>
