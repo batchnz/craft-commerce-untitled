@@ -28,4 +28,6 @@ return [
     'height' => 'height',
     'width' => 'width',
     'length' => 'length',
+    'minQty' => 'minQty',
+    'maxQty' => 'maxQty',
 ];

@@ -69,13 +69,15 @@ class VariantConfigurations extends Component
         foreach ($permutation as $i => $fieldValues) {
 
             // Normalize variant attributes
-            $price = $configuration->normalizeSettingsValue('price', $fieldValues) ?? 0.00;
-            $stock = $configuration->normalizeSettingsValue('stock', $fieldValues) ?? null;
-            $skus[] = $sku = $configuration->normalizeSettingsValue('sku', $fieldValues) ?? '';
-            $weight = $configuration->normalizeSettingsValue('weight', $fieldValues) ?? 0.00;
-            $height = $configuration->normalizeSettingsValue('height', $fieldValues) ?? 0.00;
-            $length = $configuration->normalizeSettingsValue('length', $fieldValues) ?? 0.00;
-            $width = $configuration->normalizeSettingsValue('width', $fieldValues) ?? 0.00;
+            $price = $configuration->normalizeSettingsValue('price', $fieldValues, 0.00);
+            $stock = $configuration->normalizeSettingsValue('stock', $fieldValues, null);
+            $skus[] = $sku = $configuration->normalizeSettingsValue('sku', $fieldValues, '');
+            $weight = $configuration->normalizeSettingsValue('weight', $fieldValues, 0.00);
+            $height = $configuration->normalizeSettingsValue('height', $fieldValues, 0.00);
+            $length = $configuration->normalizeSettingsValue('length', $fieldValues, 0.00);
+            $width = $configuration->normalizeSettingsValue('width', $fieldValues, 0.00);
+            $minQty = $configuration->normalizeSettingsValue('minQty', $fieldValues, null);
+            $maxQty = $configuration->normalizeSettingsValue('maxQty', $fieldValues, null);
 
 
             // Normalzie variant field values
@@ -98,8 +100,8 @@ class VariantConfigurations extends Component
             $variantData = [
                 'price' => $price,
                 'stock' => $stock,
-                'minQty' => null,
-                'maxQty' => null,
+                'minQty' => $minQty,
+                'maxQty' => $maxQty,
                 'fields' => $fields,
                 'sku' => $sku,
                 'weight' => $weight,

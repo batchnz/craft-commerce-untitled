@@ -130,6 +130,8 @@ const getSettingsMethodFieldRules = (type) => {
       case "height":
       case "length":
       case "width":
+      case "minQty":
+      case "maxQty":
       default:
         rules[value] = number()
           .typeError("Please enter a number")
@@ -162,6 +164,8 @@ const getSettingsMethodAllRules = (type) => {
     case "height":
     case "length":
     case "width":
+    case "minQty":
+    case "maxQty":
     default:
       return object({
         value: number()

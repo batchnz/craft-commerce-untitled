@@ -15,7 +15,7 @@ use craft\commerce\elements\db\VariantQuery;
 class VariantConfigurationSetting extends Model
 {
     // Constant Values
-    public const VALID_SETTINGS_TYPES = ['stock', 'price', 'sku', 'weight', 'height', 'length', 'width'];
+    public const VALID_SETTINGS_TYPES = ['stock', 'price', 'sku', 'weight', 'height', 'length', 'width', 'minQty', 'maxQty'];
     public const VALID_SETTINGS_METHODS = ['all', 'skip', 'field'];
 
     public $field;
