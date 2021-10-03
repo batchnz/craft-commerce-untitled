@@ -78,10 +78,12 @@ class VariantsController extends Controller
                     CurrencyHelper::formatAsCurrency($variant->price, $currency),
                     $variant->minQty,
                     $variant->maxQty,
-                    $variant->weight,
-                    $variant->width,
-                    $variant->height,
-                    $variant->length,
+                    ...($product->getType()->hasDimensions ? [
+                        $variant->weight,
+                        $variant->length,
+                        $variant->width,
+                        $variant->height,
+                    ] : []),
                 ],
                 ...$this->_getVariantFieldValues($variant, $fields)
             ];

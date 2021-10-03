@@ -72,10 +72,10 @@ class VariantConfigurations extends Component
             $price = $configuration->normalizeSettingsValue('price', $fieldValues, 0.00);
             $stock = $configuration->normalizeSettingsValue('stock', $fieldValues, null);
             $skus[] = $sku = $configuration->normalizeSettingsValue('sku', $fieldValues, '');
-            $weight = $configuration->normalizeSettingsValue('weight', $fieldValues, 0.00);
-            $height = $configuration->normalizeSettingsValue('height', $fieldValues, 0.00);
-            $length = $configuration->normalizeSettingsValue('length', $fieldValues, 0.00);
-            $width = $configuration->normalizeSettingsValue('width', $fieldValues, 0.00);
+            $weight = $configuration->normalizeSettingsValue('weight', $fieldValues, null);
+            $height = $configuration->normalizeSettingsValue('height', $fieldValues, null);
+            $length = $configuration->normalizeSettingsValue('length', $fieldValues, null);
+            $width = $configuration->normalizeSettingsValue('width', $fieldValues, null);
             $minQty = $configuration->normalizeSettingsValue('minQty', $fieldValues, null);
             $maxQty = $configuration->normalizeSettingsValue('maxQty', $fieldValues, null);
 
