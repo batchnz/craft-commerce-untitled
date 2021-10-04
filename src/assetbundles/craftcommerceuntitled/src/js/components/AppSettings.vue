@@ -30,7 +30,7 @@
           <div class="input ltr">
             <div class="flex">
               <!-- Prefix price with a $ -->
-              <div v-if="type === 'price'" >$</div>
+              <div v-if="type === 'price'">$</div>
               <input
                 type="text"
                 class="nicetext text"
@@ -38,7 +38,9 @@
                 :value="values['value']"
               />
               <!-- Suffix weight with a g -->
-              <div v-if="type === 'weight'" >g</div>
+              <div v-if="type === 'weight'">g</div>
+              <!-- Suffix dimensions with a mm -->
+              <div v-if="['length,', 'height', 'width'].includes(type)">mm</div>
             </div>
           </div>
           <ul class="errors" v-if="errors[`settings.${type}.values.value`]">
@@ -100,6 +102,8 @@
                 />
                 <!-- Suffix weight with a g -->
                 <div v-if="type === 'weight'">g</div>
+                <!-- Suffix dimensions with a mm -->
+                <div v-if="['length,', 'height', 'width'].includes(type)">mm</div>
               </div>
             </div>
             <ul
