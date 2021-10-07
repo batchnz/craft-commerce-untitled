@@ -537,8 +537,11 @@ class VariantConfiguration extends Element
      * @param  array  $fields   An array of values keyed by field handles
      * @return mixed
      */
-    public function normalizeSettingsValue($type, $fields = [])
+    public function normalizeSettingsValue($type, $fields = [], $defaultValue)
     {
+        // IMPORTANT: This needs to be changed to the string null to prevent errors with rendering the object template
+        $defaultValue = $defaultValue ?? 'null';
+
         $settings = $this->settings[$type] ?? null;
         if( empty($settings) ) return null;
 
@@ -556,9 +559,10 @@ class VariantConfiguration extends Element
         // Render the element title into the value string
         $value = Craft::$app
             ->getView()
-            ->renderObjectTemplate($value, $this, $variables, View::TEMPLATE_MODE_CP);
+            ->renderObjectTemplate($value ?? $defaultValue, $this, $variables, View::TEMPLATE_MODE_CP);
 
-        return $value;
+        //Important: if the string null was passed to the template, convert it back to be used in the db
+        return $value === 'null' ? null : $value;
     }
 
     /**

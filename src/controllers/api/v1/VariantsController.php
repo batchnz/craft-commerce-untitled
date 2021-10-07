@@ -75,7 +75,15 @@ class VariantsController extends Controller
                 ...[
                     $variant->sku,
                     $variant->stock,
-                    CurrencyHelper::formatAsCurrency($variant->price, $currency)
+                    CurrencyHelper::formatAsCurrency($variant->price, $currency),
+                    $variant->minQty,
+                    $variant->maxQty,
+                    ...($product->getType()->hasDimensions ? [
+                        $variant->weight,
+                        $variant->length,
+                        $variant->width,
+                        $variant->height,
+                    ] : []),
                 ],
                 ...$this->_getVariantFieldValues($variant, $fields)
             ];

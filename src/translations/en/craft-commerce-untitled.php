@@ -24,4 +24,10 @@ return [
     'price' => 'price',
     'stock' => 'stock',
     'sku' => 'SKU',
+    'weight' => 'weight',
+    'height' => 'height',
+    'width' => 'width',
+    'length' => 'length',
+    'minQty' => 'minQty',
+    'maxQty' => 'maxQty',
 ];

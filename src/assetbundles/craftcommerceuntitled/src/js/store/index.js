@@ -7,6 +7,8 @@ import AsyncEventBus from "./asyncEventBus";
 
 import * as MUTATIONS from "../constants/mutationTypes";
 import * as SETTINGS from "../constants/settingsTypes";
+import {DIMENSIONS_DEPENDANT_TYPES, TYPES} from "../constants/settingsTypes";
+import {ValidationError} from "yup";
 
 Vue.use(Vuex);
 
@@ -94,6 +96,7 @@ export default new Vuex.Store({
     variantConfiguration: getNewVariantConfiguration(),
     variantConfigurations: [],
     variantConfigurationTypeFields: [],
+    hasDimensions: null,
   },
   mutations: {
     /**
@@ -138,6 +141,18 @@ export default new Vuex.Store({
      */
     [MUTATIONS.SET_VARIANT_CONFIGURATIONS](state, payload) {
       state.variantConfigurations = payload;
+    },
+
+    /**
+     * Sets whether the allow dimensions option has been ticked for
+     * the current product
+     * @author Daniel Siemers <daniel@batch.nz>
+     * @since  1.0.0
+     * @param object state
+     * @param object payload
+     */
+    [MUTATIONS.SET_HAS_DIMENSIONS](state, payload) {
+      state.hasDimensions = payload;
     },
 
     /**
@@ -525,6 +540,7 @@ export default new Vuex.Store({
         commit(MUTATIONS.SET_FORM_ERRORS, {});
         await schema.validate(values, { abortEarly: false });
       } catch (err) {
+        if (!(err instanceof ValidationError)) throw err;
         if (err.inner) {
           err.inner.forEach((error) => {
             commit(MUTATIONS.SET_FORM_ERRORS, {
@@ -560,6 +576,16 @@ export default new Vuex.Store({
     },
   },
   getters: {
+    /**
+     * Returns the allowed settings types for the current product
+     * @author Daniel Siemers <daniel@batch.nz>
+     * @param object state
+     * @return array
+     */
+    allowedTypes(state) {
+      return TYPES.concat(state.hasDimensions ? DIMENSIONS_DEPENDANT_TYPES : []);
+    },
+
     /**
      * Returns settings by type
      * @author Josh Smith <josh@batch.nz>

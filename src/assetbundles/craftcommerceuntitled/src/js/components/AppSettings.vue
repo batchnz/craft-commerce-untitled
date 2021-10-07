@@ -1,5 +1,5 @@
 <template>
-  <div class="field">
+  <div class="field" v-if="!(type === 'weight' && !hasDimensions)">
     <div class="heading">
       <label>{{ typeTitle }}</label>
       <div class="instructions">
@@ -28,24 +28,20 @@
             <label>{{ typeTitle }}</label>
           </div>
           <div class="input ltr">
-            <!-- Prefix with a $ -->
-            <div v-if="type === 'price'" class="flex">
-              <div>$</div>
+            <div class="flex">
+              <!-- Prefix price with a $ -->
+              <div v-if="type === 'price'">$</div>
               <input
                 type="text"
                 class="nicetext text"
                 @input="setFieldValue('value', $event.target.value)"
                 :value="values['value']"
               />
+              <!-- Suffix weight with a g -->
+              <div v-if="type === 'weight'">g</div>
+              <!-- Suffix dimensions with a mm -->
+              <div v-if="hasLength">mm</div>
             </div>
-            <!-- Otherwise, just display a plain input -->
-            <input
-              v-else
-              type="text"
-              class="nicetext text"
-              @input="setFieldValue('value', $event.target.value)"
-              :value="values['value']"
-            />
           </div>
           <ul class="errors" v-if="errors[`settings.${type}.values.value`]">
             <li>{{ errors[`settings.${type}.values.value`] }}</li>
@@ -95,24 +91,20 @@
               <label>{{ label }}</label>
             </div>
             <div class="input ltr">
-              <!-- Prefix with a $ -->
-              <div v-if="type === 'price'" class="flex">
-                <div>$</div>
+              <div class="flex">
+                <!-- Prefix price with a $ -->
+                <div v-if="type === 'price'">$</div>
                 <input
                   type="text"
                   class="nicetext text"
                   @input="setFieldValue(value, $event.target.value)"
                   :value="values[value]"
                 />
+                <!-- Suffix weight with a g -->
+                <div v-if="type === 'weight'">g</div>
+                <!-- Suffix dimensions with a mm -->
+                <div v-if="hasLength">mm</div>
               </div>
-              <!-- Otherwise, just display a plain input -->
-              <input
-                v-else
-                type="text"
-                class="nicetext text"
-                @input="setFieldValue(value, $event.target.value)"
-                :value="values[value]"
-              />
             </div>
             <ul
               class="errors"
@@ -154,8 +146,16 @@ export default {
       type: String,
       required: true,
     },
+
+    hasDimensions: {
+      type: Boolean,
+      required: true,
+    }
   },
   computed: {
+    hasLength() {
+      return ['length', 'height', 'width'].includes(this.type);
+    },
     ...mapState({
       variantSettings(state) {
         return (

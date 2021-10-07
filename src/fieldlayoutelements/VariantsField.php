@@ -12,6 +12,7 @@ namespace batchnz\craftcommerceuntitled\fieldlayoutelements;
 
 use Craft;
 use craft\base\ElementInterface;
+use craft\base\FieldInterface;
 use craft\commerce\elements\Product;
 use craft\commerce\helpers\VariantMatrix;
 use craft\helpers\Html;
@@ -27,6 +28,9 @@ use craft\commerce\fieldlayoutelements\VariantsField as CommerceVariantsField;
  */
 class VariantsField extends CommerceVariantsField
 {
+    private $FIELD_TYPES = ["SKU", "Stock", "Price", "Min Qty", "Max Qty"];
+    private $DIMENSIONS_DEPENDANT_FIELD_TYPES = ["Weight", "Length", "Width", "Height"];
+
     /**
      * @inheritdoc
      */
@@ -41,22 +45,35 @@ class VariantsField extends CommerceVariantsField
             return null;
         }
 
-        $columns = '';
+        $columns = $this->getHeaderFields($element);
         foreach ($type->getVariantFieldLayout()->getFields() as $field) {
             $columns .= "<th>$field->name</th>";
         }
 
-        return <<<EOT
- <table id="configurable-variants" class="data">
-  <thead>
-    <tr>
-      <th>SKU</th>
-      <th>Quantity</th>
-      <th>Price</th>
-      {$columns}
-    </tr>
-  </thead>
-</table>
-EOT;
+            return <<<EOT
+             <table id="configurable-variants" class="data">
+              <thead>
+                <tr>
+                  {$columns}
+                </tr>
+              </thead>
+            </table>
+            EOT;
+        }
+
+    /**
+     * @param ElementInterface $element
+     * @return string Headers for the table depending on whether dimensions are enabled for the product.
+     */
+    protected function getHeaderFields(ElementInterface $element) : string
+    {
+        $hasDimensions = $element->getType()->hasDimensions;
+        $fields =  $hasDimensions ? array_merge($this->FIELD_TYPES, $this->DIMENSIONS_DEPENDANT_FIELD_TYPES) : $this->FIELD_TYPES;
+        $columns = "";
+        foreach ($fields as $field) {
+            $columns .= "<th>$field</th>";
+        }
+
+        return $columns;
     }
 }

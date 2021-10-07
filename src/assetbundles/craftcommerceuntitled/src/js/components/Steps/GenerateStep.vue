@@ -26,7 +26,7 @@
         <label>Settings</label>
       </div>
       <ul
-        v-for="type in types"
+        v-for="type in allowedTypes"
         style="margin: 0 0 0 16px; list-style-type: disc"
       >
         <li v-if="variantConfiguration.settings[type].method === 'all'">
@@ -67,7 +67,6 @@
 
 <script>
 import { mapActions, mapMutations, mapState, mapGetters } from "vuex";
-import { TYPES } from "../../constants/settingsTypes";
 import { SET_IS_COMPLETED } from "../../constants/mutationTypes";
 import AsyncEventBus from "../../store/asyncEventBus";
 
@@ -86,10 +85,8 @@ export default {
       "selectedOptionsByFieldHandle",
       "fieldValuesByHandle",
       "optionValuesById",
+      "allowedTypes",
     ]),
-    types() {
-      return TYPES;
-    },
   },
   created() {
     AsyncEventBus.once("form-submission", this, this.handleGenerateVariants);
