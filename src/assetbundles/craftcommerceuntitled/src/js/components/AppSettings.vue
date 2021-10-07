@@ -40,7 +40,7 @@
               <!-- Suffix weight with a g -->
               <div v-if="type === 'weight'">g</div>
               <!-- Suffix dimensions with a mm -->
-              <div v-if="hasLength(type)">mm</div>
+              <div v-if="hasLength">mm</div>
             </div>
           </div>
           <ul class="errors" v-if="errors[`settings.${type}.values.value`]">
@@ -103,7 +103,7 @@
                 <!-- Suffix weight with a g -->
                 <div v-if="type === 'weight'">g</div>
                 <!-- Suffix dimensions with a mm -->
-                <div v-if="hasLength(type)">mm</div>
+                <div v-if="hasLength">mm</div>
               </div>
             </div>
             <ul
@@ -153,6 +153,9 @@ export default {
     }
   },
   computed: {
+    hasLength() {
+      return ['length', 'height', 'width'].includes(this.type);
+    },
     ...mapState({
       variantSettings(state) {
         return (
@@ -240,9 +243,6 @@ export default {
       };
       this.setSettingsType({ type: this.type, data: settings });
     },
-    hasLength(type) {
-      return ['length', 'height', 'width'].includes(type);
-    }
   },
 };
 </script>
