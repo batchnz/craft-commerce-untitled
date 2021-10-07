@@ -148,7 +148,7 @@ export default {
     },
 
     hasDimensions: {
-      type: Number,
+      type: Boolean,
       required: true,
     }
   },

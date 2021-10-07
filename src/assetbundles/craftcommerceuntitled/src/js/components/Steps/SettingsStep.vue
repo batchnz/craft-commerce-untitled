@@ -16,7 +16,7 @@ import AppSettings from "../AppSettings";
 export default {
   props: {
     hasDimensions: {
-      type: Number,
+      type: Boolean,
       required: true,
     }
   },

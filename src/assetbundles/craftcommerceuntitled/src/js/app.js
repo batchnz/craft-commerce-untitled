@@ -77,7 +77,7 @@ import "../css/app.scss";
           productId: this.settings.productId,
           productTypeId: this.settings.productTypeId,
           variantConfigurationTypeId: this.settings.variantConfigurationTypeId,
-          hasDimensions: this.settings.hasDimensions,
+          hasDimensions: !!this.settings.hasDimensions,
           // Destroy the Vue instance and reload datatables data
           onClose: (vm) => {
             vm.$destroy();
@@ -137,7 +137,7 @@ import "../css/app.scss";
       productId: null,
       productTypeId: null,
       variantConfigurationTypeId: null,
-      hasDimensions: null,
+      hasDimensions: false,
       onClose: () => {},
     },
     closeOtherModals: true,
@@ -167,7 +167,7 @@ import "../css/app.scss";
               productTypeId: this.settings.productTypeId,
               variantConfigurationTypeId: this.settings
                 .variantConfigurationTypeId,
-              hasDimensions: this.settings.hasDimensions,
+              hasDimensions: !!this.settings.hasDimensions,
               $modal: this,
             },
           }),
