@@ -328,7 +328,8 @@ class Plugin extends CraftPlugin
                         'PATCH <id:\d+>/fields' => 'save-fields',
                         'PATCH <id:\d+>/values' => 'save-values',
                         'PATCH <id:\d+>/settings' => 'save-settings',
-                        'POST <id:\d+>/variants/generate' => 'generate-variants'
+                        'POST <id:\d+>/variants/generate' => 'generate-variants',
+                        'POST <id:\d+>/variants/delete' => 'delete-variants'
                     ],
                 ];
 

@@ -7,6 +7,7 @@
           <th>Name</th>
           <th>Number of Variants</th>
           <th>Last Updated</th>
+          <th></th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -33,12 +34,12 @@ export default {
           config.dateUpdated == null
             ? null
             : new Date(config.dateUpdated).toLocaleDateString();
-        data.push([
-          config.id,
-          config.title,
-          config.numberOfVariants,
-          dateUpdated,
-        ]);
+        data.push({
+          id: config.id,
+          name: config.title,
+          num: config.numberOfVariants,
+          date: dateUpdated,
+        });
       });
       return data;
     },
@@ -53,20 +54,31 @@ export default {
       // Initialise the datatable
       this.dt = $(this.$refs.table).DataTable({
         data: this.dtData,
-        columnDefs: [
+        columns:[
+          {data: "id"},
+          {data: "name"},
+          {data: "num"},
+          {data: "date"},
           {
-            targets: [0],
-            visible: false,
+            name: "control",
             searchable: false,
-          },
-        ],
+            title: "",
+            orderable: false,
+            defaultContent: "<input type=\"button\" value=\"Click me\">",
+            createdCell: function(cell, cellData, rowData, rowIndex, colIndex) {
+              $(cell).on("click", "input", function on_GridActionButton_Click(event) {
+              alert("You clicked in " + event.data.name + "'s row");
+            });
+            }
+          }
+        ]
       });
 
       // Add a click event handler on the datatable
       $(".dataTable").on("click", "tbody tr", function () {
         const data = self.dt.row(this).data();
         self.clearFormErrors();
-        self.setCurrentVariantConfigurationById(data[0]);
+        self.setCurrentVariantConfigurationById(data.id);
       });
     });
   },
@@ -75,6 +87,7 @@ export default {
       "setCurrentVariantConfigurationById",
       "createNewVariantConfiguration",
       "clearFormErrors",
+      "deleteVariantConfiguration"
     ]),
   },
   beforeDestroy() {
