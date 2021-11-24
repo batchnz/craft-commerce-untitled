@@ -104,8 +104,14 @@ class VariantConfigurationsController extends Controller
             throw new NotFoundHttpException('Variant Configuration not found.');
         }
 
+        // Delete variants generated from ths configuration
+        // Delete the configuration itself
+        Plugin::getInstance()
+            ->getVariantConfigurations()
+            ->deleteVariantsByConfiguration($configuration);
+
         return $this->asJson([
-            'result' => $configuration,
+            'result' => 'success',
         ]);
     }
 

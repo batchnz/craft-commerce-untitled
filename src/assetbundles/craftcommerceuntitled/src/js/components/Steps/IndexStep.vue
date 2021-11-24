@@ -16,8 +16,9 @@
 </template>
 
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapState, mapMutations, mapGetters } from "vuex";
 import AsyncEventBus from "../../store/asyncEventBus";
+import * as MUTATIONS from "../../constants/mutationTypes";
 
 export default {
   data() {
@@ -25,25 +26,28 @@ export default {
       dt: null,
     };
   },
-  computed: mapState({
-    variantConfigurations: (state) => state.variantConfigurations,
-    dtData() {
-      const data = [];
-      this.variantConfigurations.forEach((config) => {
-        const dateUpdated =
-          config.dateUpdated == null
-            ? null
-            : new Date(config.dateUpdated).toLocaleDateString();
-        data.push({
-          id: config.id,
-          name: config.title,
-          num: config.numberOfVariants,
-          date: dateUpdated,
+  computed: {
+    ...mapState({
+      productId: (state) => state.productId,
+      variantConfigurations: (state) => state.variantConfigurations,
+      dtData() {
+        const data = [];
+        this.variantConfigurations.forEach((config) => {
+          const dateUpdated =
+            config.dateUpdated == null
+              ? null
+              : new Date(config.dateUpdated).toLocaleDateString();
+          data.push({
+            id: config.id,
+            name: config.title,
+            num: config.numberOfVariants,
+            date: dateUpdated,
+          });
         });
-      });
-      return data;
-    },
-  }),
+        return data;
+      },
+    }),
+  },
   created() {
     AsyncEventBus.once("form-submission", this.createNewVariantConfiguration);
   },
@@ -84,16 +88,26 @@ export default {
             searchable: false,
             title: "",
             orderable: false,
-            defaultContent: "<input type=\"button\" class=\"delete\" value=\"Click me\">",
+            defaultContent: "<input type=\"button\" class=\"delete btn\" value=\"Delete\">",
             createdCell: function(cell, cellData, rowData, rowIndex, colIndex) {
               $(cell).on(
                 "click",
                 "input", 
                 async () => {
-                  const result = await self.deleteVariantConfiguration(rowData.id);
-                  const json = await result.json();
-                  console.log(json);
-                  self.resetForm();
+                  if (!confirm(`Are you sure you want to permanently delete the ${rowData.name} variant configuration?`)) return;
+
+                  self.setIsLoading(true);
+                  try {
+                    const result = await self.deleteVariantConfiguration(rowData.id);
+                    await self.fetchVariantConfigurations({
+                      "productId": self.productId,
+                    });
+                  } catch (e) {
+                    console.error(e);
+                  } finally {
+                    self.resetForm();
+                    self.setIsLoading(false);
+                  }
                 }
               );
             }
@@ -115,8 +129,14 @@ export default {
       "createNewVariantConfiguration",
       "clearFormErrors",
       "deleteVariantConfiguration",
-      "resetForm"
+      "resetForm",
+      "fetchVariantConfigurations",
+      "fetchVariantConfigurationTypeFields",
     ]),
+    ...mapMutations({
+      setIsLoading: MUTATIONS.SET_IS_LOADING,
+    }),
+
   },
   beforeDestroy() {
     this.dt.destroy();
