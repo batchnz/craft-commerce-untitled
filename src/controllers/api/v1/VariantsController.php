@@ -11,18 +11,14 @@
 namespace batchnz\craftcommerceuntitled\controllers\api\v1;
 
 use batchnz\craftcommerceuntitled\Plugin;
-use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationModel;
-use batchnz\craftcommerceuntitled\helpers\VariantConfiguration as VariantConfigurationHelper;
 
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\elements\Variant;
 use craft\commerce\helpers\Currency as CurrencyHelper;
 
-use Craft;
 use craft\elements\db\Element;
 
 use yii\rest\Controller;
-use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -35,7 +31,6 @@ use yii\web\NotFoundHttpException;
  */
 class VariantsController extends Controller
 {
-
     // Public Methods
     // =========================================================================
 
@@ -53,11 +48,15 @@ class VariantsController extends Controller
 
         // Fetch product
         $product = Commerce::getInstance()->getProducts()->getProductById($productId);
-        if( empty($product) ) throw new NotFoundHttpException();
+        if (empty($product)) {
+            throw new NotFoundHttpException();
+        }
 
         // Get the main currency
         $currency = Commerce::getInstance()->getPaymentCurrencies()->getPrimaryPaymentCurrency();
-        if( empty($currency) ) throw new NotFoundHttpException();
+        if (empty($currency)) {
+            throw new NotFoundHttpException();
+        }
 
         // Fetch the fields on the variant field layout
         $variantFieldLayout = $product->getType()->getVariantFieldLayout();
@@ -103,13 +102,13 @@ class VariantsController extends Controller
      */
     private function _getVariantFieldValues(Variant $variant, array $fields): array
     {
-        return array_map(function($field) use($variant) {
-            if( !is_array($variant->$field) ){
+        return array_map(function ($field) use ($variant) {
+            if (!is_array($variant->$field)) {
                 $variant->$field = [$variant->$field];
             };
 
             // Return element titles or just the value
-            $values = array_map(function($value){
+            $values = array_map(function ($value) {
                 return $value instanceof Element ? $value->title : $value;
             }, $variant->$field);
 

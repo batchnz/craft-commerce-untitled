@@ -391,6 +391,19 @@ export default new Vuex.Store({
     },
 
     /**
+     * Deletion variation config and variants for the passed config ID
+     * @author Daniel Siemers <daniel@batch.nz>
+     * @param  integer variantConfigurationId
+     * @return void
+     */
+     async deleteVariantConfiguration({ commit }, variantConfigurationId) {
+      commit(MUTATIONS.SET_IS_SUBMITTING, true);
+      const response = await Api.deleteVariantConfiguration(variantConfigurationId);
+      commit(MUTATIONS.SET_IS_SUBMITTING, false);
+      return response;
+    },
+
+    /**
      * Sets the current editable variant configuration
      * by fetching the vc from loaded data by ID
      * @author Josh Smith <josh@batch.nz>
