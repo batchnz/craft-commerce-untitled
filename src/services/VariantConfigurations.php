@@ -15,10 +15,10 @@ use batchnz\craftcommerceuntitled\elements\VariantConfiguration;
 
 use Craft;
 use craft\base\Component;
-use craft\fields\BaseRelationField;
 
 use craft\commerce\elements\Variant;
 use craft\commerce\helpers\Product as ProductHelper;
+use yii\db\Exception;
 
 /**
  * VariantConfigurations Service
@@ -79,7 +79,6 @@ class VariantConfigurations extends Component
             $minQty = $configuration->normalizeSettingsValue('minQty', $fieldValues, null);
             $maxQty = $configuration->normalizeSettingsValue('maxQty', $fieldValues, null);
 
-
             // Normalzie variant field values
             $fields = $configuration->normalizeVariantFieldValues($fieldValues);
 
@@ -93,7 +92,7 @@ class VariantConfigurations extends Component
             }
 
             // Postfix duplicate SKUs e.g. mysku-1, mysku-2 etc...
-            if( $dups = array_diff_key($skus, array_unique($skus)) ){
+            if ($dups = array_diff_key($skus, array_unique($skus))) {
                 $sku = $sku . '-' . count($dups);
             }
 
@@ -122,5 +121,34 @@ class VariantConfigurations extends Component
         // Update the list of variants stored against this configuration and save
         $configuration->variants = $savedVariantIds;
         Craft::$app->getElements()->saveElement($configuration);
+    }
+
+    /**
+     * Delete variants for a given configuration
+     * and the variant configuration itself
+     * @author Daniel Siemers <daniel@batch.nz>
+     * @param  VariantConfiguration $configuration
+     * @return void
+     */
+    public function deleteVariantsByConfiguration(VariantConfiguration $configuration)
+    {
+        $configurationVariantIds = $configuration->variants ?? [];
+        $existingVariantIds = Variant::find()->where(['in', 'commerce_variants.id', $configurationVariantIds])->ids();
+
+        try {
+            // Delete variants.
+            foreach ($existingVariantIds as $elementId) {
+                Craft::$app->getElements()->deleteElementById($elementId, null, null, true);
+            }
+        } catch (Exception $e) {
+            throw new Exception('Something went wrong when deleting variants for given variant configuration:' . $e->getMessage());
+        }
+
+        try {
+            // Delete variation configuration.
+            Craft::$app->getElements()->deleteElementById($configuration->id, null, null, true);
+        } catch (Exception $e) {
+            throw new Exception('Something went wrong when deleting variant configuration:' . $e->getMessage());
+        }
     }
 }

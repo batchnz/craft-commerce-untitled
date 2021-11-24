@@ -7,6 +7,7 @@
           <th>Name</th>
           <th>Number of Variants</th>
           <th>Last Updated</th>
+          <th></th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -15,8 +16,9 @@
 </template>
 
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapState, mapMutations, mapGetters } from "vuex";
 import AsyncEventBus from "../../store/asyncEventBus";
+import * as MUTATIONS from "../../constants/mutationTypes";
 
 export default {
   data() {
@@ -24,25 +26,28 @@ export default {
       dt: null,
     };
   },
-  computed: mapState({
-    variantConfigurations: (state) => state.variantConfigurations,
-    dtData() {
-      const data = [];
-      this.variantConfigurations.forEach((config) => {
-        const dateUpdated =
-          config.dateUpdated == null
-            ? null
-            : new Date(config.dateUpdated).toLocaleDateString();
-        data.push([
-          config.id,
-          config.title,
-          config.numberOfVariants,
-          dateUpdated,
-        ]);
-      });
-      return data;
-    },
-  }),
+  computed: {
+    ...mapState({
+      productId: (state) => state.productId,
+      variantConfigurations: (state) => state.variantConfigurations,
+      dtData() {
+        const data = [];
+        this.variantConfigurations.forEach((config) => {
+          const dateUpdated =
+            config.dateUpdated == null
+              ? null
+              : new Date(config.dateUpdated).toLocaleDateString();
+          data.push({
+            id: config.id,
+            name: config.title,
+            num: config.numberOfVariants,
+            date: dateUpdated,
+          });
+        });
+        return data;
+      },
+    }),
+  },
   created() {
     AsyncEventBus.once("form-submission", this.createNewVariantConfiguration);
   },
@@ -53,20 +58,68 @@ export default {
       // Initialise the datatable
       this.dt = $(this.$refs.table).DataTable({
         data: this.dtData,
-        columnDefs: [
+        columns:[
           {
-            targets: [0],
-            visible: false,
-            searchable: false,
+            data: "id",
+            createdCell: function(cell, cellData, rowData, rowIndex, colIndex) {
+                $(cell).addClass("variant-cell");
+            }
           },
-        ],
+          {
+            data: "name",
+            createdCell: function(cell, cellData, rowData, rowIndex, colIndex) {
+                $(cell).addClass("variant-cell");
+            }
+          },
+          {
+            data: "num",
+            createdCell: function(cell, cellData, rowData, rowIndex, colIndex) {
+                $(cell).addClass("variant-cell");
+            }
+          },
+          {
+            data: "date",
+            createdCell: function(cell, cellData, rowData, rowIndex, colIndex) {
+                $(cell).addClass("variant-cell");
+            }
+          },
+          {
+            name: "control",
+            searchable: false,
+            title: "",
+            orderable: false,
+            defaultContent: "<input type=\"button\" class=\"delete btn\" value=\"Delete\">",
+            createdCell: function(cell, cellData, rowData, rowIndex, colIndex) {
+              $(cell).on(
+                "click",
+                "input", 
+                async () => {
+                  if (!confirm(`Are you sure you want to permanently delete the ${rowData.name} variant configuration?`)) return;
+
+                  self.setIsLoading(true);
+                  try {
+                    const result = await self.deleteVariantConfiguration(rowData.id);
+                    await self.fetchVariantConfigurations({
+                      "productId": self.productId,
+                    });
+                  } catch (e) {
+                    console.error(e);
+                  } finally {
+                    self.resetForm();
+                    self.setIsLoading(false);
+                  }
+                }
+              );
+            }
+          }
+        ]
       });
 
       // Add a click event handler on the datatable
-      $(".dataTable").on("click", "tbody tr", function () {
+      $(".dataTable").on("click", ".variant-cell", function () {
         const data = self.dt.row(this).data();
         self.clearFormErrors();
-        self.setCurrentVariantConfigurationById(data[0]);
+        self.setCurrentVariantConfigurationById(data.id);
       });
     });
   },
@@ -75,7 +128,15 @@ export default {
       "setCurrentVariantConfigurationById",
       "createNewVariantConfiguration",
       "clearFormErrors",
+      "deleteVariantConfiguration",
+      "resetForm",
+      "fetchVariantConfigurations",
+      "fetchVariantConfigurationTypeFields",
     ]),
+    ...mapMutations({
+      setIsLoading: MUTATIONS.SET_IS_LOADING,
+    }),
+
   },
   beforeDestroy() {
     this.dt.destroy();

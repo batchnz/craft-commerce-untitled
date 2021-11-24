@@ -30,7 +30,6 @@ use yii\web\NotFoundHttpException;
  */
 class VariantConfigurationsController extends Controller
 {
-
     // Public Methods
     // =========================================================================
 
@@ -44,12 +43,12 @@ class VariantConfigurationsController extends Controller
         // Initialise a blank variant configuration query
         $variantConfigurationsQuery = VariantConfigurationModel::find();
 
-        if( $id = $this->request->getQueryParam('id') ){
+        if ($id = $this->request->getQueryParam('id')) {
             $variantConfigurationsQuery->id($id);
         }
 
         // Filter on product Ids
-        if( $productId = $this->request->getQueryParam('productId') ){
+        if ($productId = $this->request->getQueryParam('productId')) {
             $variantConfigurationsQuery->productId($productId);
         }
 
@@ -74,13 +73,42 @@ class VariantConfigurationsController extends Controller
             ->id($id)
             ->one();
 
-        if( empty($configuration) )
+        if (empty($configuration)) {
             throw new NotFoundHttpException('Variant Configuration not found.');
+        }
 
         // Create variants from the configuration selections
         Plugin::getInstance()
             ->getVariantConfigurations()
             ->generateVariantsByConfiguration($configuration);
+
+        return $this->asJson([
+            'result' => 'success',
+        ]);
+    }
+
+    /**
+     * Endpoint to delete variants for the configuration
+     * and the variant configuration itself
+     * @author Daniel Siemers <josh@batch.nz>
+     * @param  int $id ID of the configuration to delete
+     * @return \yii\web\Response
+     */
+    public function actionDeleteVariants(int $id)
+    {
+        $configuration = VariantConfigurationModel::find()
+            ->id($id)
+            ->one();
+
+        if (empty($configuration)) {
+            throw new NotFoundHttpException('Variant Configuration not found.');
+        }
+
+        // Delete variants generated from ths configuration
+        // Delete the configuration itself
+        Plugin::getInstance()
+            ->getVariantConfigurations()
+            ->deleteVariantsByConfiguration($configuration);
 
         return $this->asJson([
             'result' => 'success',
@@ -104,11 +132,11 @@ class VariantConfigurationsController extends Controller
         return $this->save($variantConfiguration);
     }
 
-     /**
-     * PATCH endpoint to save variant configuration fields
-     * @author Josh Smith <josh@batch.nz>
-     * @return JSON
-     */
+    /**
+    * PATCH endpoint to save variant configuration fields
+    * @author Josh Smith <josh@batch.nz>
+    * @return JSON
+    */
     public function actionSaveFields($id = null)
     {
         // Enforce PATCH
@@ -118,7 +146,7 @@ class VariantConfigurationsController extends Controller
 
         // Enforce that fields have been passed
         $fields = $this->request->getBodyParam('fields');
-        if( empty($fields) ){
+        if (empty($fields)) {
             throw new BadRequestHttpException('No fields received.');
         }
 
@@ -150,7 +178,7 @@ class VariantConfigurationsController extends Controller
 
         // Enforce that values have been passed
         $values = $this->request->getBodyParam('values');
-        if( empty($values) ){
+        if (empty($values)) {
             throw new BadRequestHttpException('No values received.');
         }
 
@@ -181,7 +209,7 @@ class VariantConfigurationsController extends Controller
 
         // Enforce that settings have been passed
         $settings = $this->request->getBodyParam('settings');
-        if( empty($settings) ){
+        if (empty($settings)) {
             throw new BadRequestHttpException('No settings received.');
         }
 
@@ -212,7 +240,7 @@ class VariantConfigurationsController extends Controller
         // Save it.
         $result = Craft::$app->getElements()->saveElement($variantConfiguration);
 
-        if( $result === false ){
+        if ($result === false) {
             return $this->asJson([
                 'result' => 'validation_error',
                 'errors' => $variantConfiguration->getErrors()

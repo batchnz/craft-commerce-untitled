@@ -54,6 +54,21 @@ const saveVariantConfiguration = async (data = {}) => {
 };
 
 /**
+ * Deletes a variant configuration fields to the API and
+ * deletes all generated variants
+ * @author Daniel Siemers <daniel@batch.nz>
+ * @param integer variantConfigurationId
+ * @return Promise
+ */
+const deleteVariantConfiguration = async (variantConfigurationId) => {
+  return await fetch(getApiUrl(`variant-configurations/${variantConfigurationId}/variants/delete`), {
+    method: "POST",
+    headers: POST_HEADERS,
+    body: JSON.stringify({}),
+  });
+};
+
+/**
  * Saves a product variant type
  * @author Josh Smith <josh@batch.nz>
  * @param  int productId
@@ -91,4 +106,5 @@ export default {
   saveVariantConfiguration,
   generateVariants,
   saveProductVariantType,
+  deleteVariantConfiguration,
 };
