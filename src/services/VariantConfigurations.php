@@ -69,14 +69,13 @@ class VariantConfigurations extends Component
 
         // Fetch existing variants that match this configuration
         $configurationVariantIds = $configuration->variants ?? [];
-        $existingVariants = Variant::find()->where(['in', 'commerce_variants.id', $configurationVariantIds])->all();
+        $existingVariants = Variant::find()->where(['in', 'commerce_variants.id', $configurationVariantIds])->anyStatus()->all();
 
         // Find all SKUs of existing variants in this configuration
         $existingSkus = [];
         foreach ($existingVariants as $variant) {
             $existingSkus[$variant->getSku()] = [
-                "id" => $variant->getId(),
-                'uid' => $variant->uid,
+                "variant" => $variant,
             ];
         }
 
@@ -119,8 +118,11 @@ class VariantConfigurations extends Component
 
             // If this variant SKU already exists, update the id and the uid of the variant being created to that of the existing one.
             if (array_key_exists($sku, $existingSkus) && $existingSkus[$sku]) {
-                $variant->id = $existingSkus[$sku]['id'];
-                $variant->uid = $existingSkus[$sku]['uid'];
+                /** @var Variant $variant */
+                $existingVariant = $existingSkus[$sku]['variant'];
+                $variant->id = $existingVariant->id;
+                $variant->uid = $existingVariant->uid;
+                $existingVariant->setEnabledForSite(true);
                 // Remove this sku from the array as it has been assigned.
                 unset($existingSkus[$sku]);
             }
@@ -137,7 +139,11 @@ class VariantConfigurations extends Component
 
         // Delete all variants with skus that have not been assigned by the updated configuration
         foreach ($existingSkus as $existingSku) {
-            Craft::$app->getElements()->deleteElementById($existingSku['id'], null, null, true);
+            /** @var Variant $variant */
+            $existingVariant = $existingSku['variant'];
+            $existingVariant->setEnabledForSite(false);
+            Craft::$app->getElements()->saveElement($existingVariant);
+            $savedVariantIds[] = $existingVariant->id;
         }
 
         // Update the list of variants stored against this configuration and save
