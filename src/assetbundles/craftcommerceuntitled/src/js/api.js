@@ -95,7 +95,7 @@ const getApiUrl = (slug = "", params = {}) => {
 
   // Assemble the api url with query string params
   // Plugin handle and API version is set in the controller
-  return `${Craft.getSiteUrl() + Craft.CommerceUntitled.pluginHandle}/api/${
+  return `/${Craft.CommerceUntitled.pluginHandle}/api/${
     Craft.CommerceUntitled.apiVersion
   }/${slug + (qs.length > 0 ? `?${qs}` : ``)}`;
 };
