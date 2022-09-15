@@ -3,7 +3,6 @@
 namespace batchnz\craftcommerceuntitled\behaviors;
 
 use batchnz\craftcommerceuntitled\events\NormalizeFieldValuesEvent;
-
 use yii\base\Behavior;
 
 /**
@@ -41,7 +40,7 @@ class NormalizeBaseFieldValuesBehavior extends Behavior
                 'field' => $this,
                 'fieldValues' => $fieldValues
             ]);
-            $this->trigger(self::EVENT_BEFORE_NORMALIZE_FIELD_VALUES, $normalizeFieldValuesEvent);
+            $this->owner->trigger(self::EVENT_BEFORE_NORMALIZE_FIELD_VALUES, $normalizeFieldValuesEvent);
 
             if (!$normalizeFieldValuesEvent->isValid) {
                 return;
@@ -55,7 +54,7 @@ class NormalizeBaseFieldValuesBehavior extends Behavior
                 'field' => $this,
                 'fieldValues' => $fieldValues
             ]);
-            $this->trigger(self::EVENT_AFTER_NORMALIZE_FIELD_VALUES, $normalizeFieldValuesEvent);
+            $this->owner->trigger(self::EVENT_AFTER_NORMALIZE_FIELD_VALUES, $normalizeFieldValuesEvent);
 
             if (!$normalizeFieldValuesEvent->isValid) {
                 return;
