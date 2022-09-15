@@ -2,7 +2,7 @@
     "name": "batchnz/craft-commerce-untitled",
     "description": "Easily generate and manage collections of Variants from their field types and values.",
     "type": "craft-plugin",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "keywords": [
         "craft",
         "cms",

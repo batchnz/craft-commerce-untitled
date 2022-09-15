@@ -66,6 +66,19 @@ class VariantConfigurations extends Component
 
         $skus = [];
         $savedVariantIds = [];
+
+        // Fetch existing variants that match this configuration
+        $configurationVariantIds = $configuration->variants ?? [];
+        $existingVariants = Variant::find()->where(['in', 'commerce_variants.id', $configurationVariantIds])->anyStatus()->all();
+
+        // Find all SKUs of existing variants in this configuration
+        $existingSkus = [];
+        foreach ($existingVariants as $variant) {
+            $existingSkus[$variant->getSku()] = [
+                "variant" => $variant,
+            ];
+        }
+
         foreach ($permutation as $i => $fieldValues) {
 
             // Normalize variant attributes
@@ -81,15 +94,6 @@ class VariantConfigurations extends Component
 
             // Normalzie variant field values
             $fields = $configuration->normalizeVariantFieldValues($fieldValues);
-
-            // Fetch existing variants that match this configuration
-            $configurationVariantIds = $configuration->variants ?? [];
-            $existingVariantIds = Variant::find()->where(['in', 'commerce_variants.id', $configurationVariantIds])->ids();
-
-            // Delete.
-            foreach ($existingVariantIds as $elementId) {
-                Craft::$app->getElements()->deleteElementById($elementId, null, null, true);
-            }
 
             // Postfix duplicate SKUs e.g. mysku-1, mysku-2 etc...
             if ($dups = array_diff_key($skus, array_unique($skus))) {
@@ -112,10 +116,34 @@ class VariantConfigurations extends Component
             // Populate the variant element
             $variant = ProductHelper::populateProductVariantModel($product, $variantData, 'new');
 
+            // If this variant SKU already exists, update the id and the uid of the variant being created to that of the existing one.
+            if (array_key_exists($sku, $existingSkus) && $existingSkus[$sku]) {
+                /** @var Variant $variant */
+                $existingVariant = $existingSkus[$sku]['variant'];
+                $variant->id = $existingVariant->id;
+                $variant->uid = $existingVariant->uid;
+                $existingVariant->setEnabledForSite(true);
+                // Remove this sku from the array as it has been assigned.
+                unset($existingSkus[$sku]);
+            }
+
             // Save the variant
-            Craft::$app->getElements()->saveElement($variant);
+            try {
+                Craft::$app->getElements()->saveElement($variant);
+            } catch (\Exception $e) {
+                throw new \RuntimeException("Failed to save variant {$variant->id}: " . $e->getMessage());
+            }
 
             $savedVariantIds[] = $variant->id;
+        }
+
+        // Delete all variants with skus that have not been assigned by the updated configuration
+        foreach ($existingSkus as $existingSku) {
+            /** @var Variant $variant */
+            $existingVariant = $existingSku['variant'];
+            $existingVariant->setEnabledForSite(false);
+            Craft::$app->getElements()->saveElement($existingVariant);
+            $savedVariantIds[] = $existingVariant->id;
         }
 
         // Update the list of variants stored against this configuration and save

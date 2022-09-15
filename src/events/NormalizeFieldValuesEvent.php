@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2020 Josh Smith
  */
 
-namespace batchnz\untitledcraftcommerce\events;
+namespace batchnz\craftcommerceuntitled\events;
 
 use craft\events\CancelableEvent;
 
