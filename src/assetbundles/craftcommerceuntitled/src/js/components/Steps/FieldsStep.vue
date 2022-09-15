@@ -7,7 +7,7 @@
           @click="toggleAllSelectedFields"
           href="#"
           style="font-size: 11px; font-weight: normal; margin-left: 2px"
-          >{{ isAllSelected ? "Unselect all" : "Select all" }}</a
+          >{{ isAllFieldsSelected ? "Unselect all" : "Select all" }}</a
         >
       </label>
     </div>
@@ -45,7 +45,7 @@ export default {
       fields: (state) => state.variantConfigurationTypeFields,
       errors: (state) => state.formErrors,
     }),
-    ...mapGetters({ isAllSelected: "isAllFieldsSelected" }),
+    ...mapGetters(["isAllFieldsSelected"]),
     variantFields: {
       get() {
         return this.$store.state.variantConfiguration.fields;
