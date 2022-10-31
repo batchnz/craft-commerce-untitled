@@ -6,7 +6,6 @@ use batchnz\craftcommerceuntitled\Plugin;
 use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationModel;
 
 use Craft;
-use craft\helpers\DateTimeHelper;
 use craft\web\Request;
 use yii\base\Exception;
 use yii\web\NotFoundHttpException;
@@ -41,10 +40,10 @@ class VariantConfiguration
                     ->getVariantConfigurations()
                     ->getVariantConfigurationById($variantConfigurationId);
 
-                if (!$variantConfiguration){
+                if (!$variantConfiguration) {
                     throw new Exception();
                 }
-            } catch(\TypeError | Exception $e) {
+            } catch (\TypeError | Exception $e) {
                 throw new NotFoundHttpException(
                     Craft::t(
                         Plugin::getInstance()->id,
@@ -53,7 +52,6 @@ class VariantConfiguration
                     )
                 );
             }
-
         } else {
             $variantConfiguration = new VariantConfigurationModel();
             $variantConfiguration->typeId = $request->getBodyParam('typeId');
@@ -83,7 +81,7 @@ class VariantConfiguration
         }
 
         // Set the element title
-        if( $title = $request->getBodyParam('title') ){
+        if ($title = $request->getBodyParam('title')) {
             $variantConfiguration->title = $title;
         }
 

@@ -2,8 +2,6 @@
 
 namespace batchnz\craftcommerceuntitled\behaviors;
 
-use batchnz\craftcommerceuntitled\behaviors\NormalizeBaseFieldValuesBehavior;
-
 use Craft;
 use craft\helpers\ElementHelper;
 
@@ -41,10 +39,10 @@ class NormalizeBaseRelationFieldValuesBehavior extends NormalizeBaseFieldValuesB
 
         // Fetch elements with enough data to represent in the UI
         $elements = [];
-        foreach ($elementQuery->all() as $element) {
-            $elements[] = [
-                'label' => $element->title,
-                'value' => (string) $element->id,
+        foreach ($elementQuery->all() as $el) {
+            $el[] = [
+                'label' => $el->title,
+                'value' => (string) $el->id,
             ];
         }
 

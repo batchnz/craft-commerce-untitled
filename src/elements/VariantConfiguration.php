@@ -260,7 +260,7 @@ class VariantConfiguration extends Element
      * @param  string $fieldHandle string
      * @return void
      */
-    protected function normalizeFieldValue(string $fieldHandle)
+    protected function normalizeFieldValue(string $fieldHandle): void
     {
         // Have we already normalized this value?
         if (isset($this->_normalizedFieldValues[$fieldHandle])) {
@@ -293,12 +293,13 @@ class VariantConfiguration extends Element
     {
         $field->required = false;
 
-        if( $field instanceof BaseRelationField ){
-            $field->limit = null;
+        if ($field instanceof CategoriesField) {
+            $field->branchLimit = null;
+            return $field;
         }
 
-        if( $field instanceof CategoriesField ){
-            $field->branchLimit = null;
+        if ($field instanceof BaseRelationField) {
+            $field->limit = null;
         }
 
         return $field;
@@ -324,27 +325,27 @@ class VariantConfiguration extends Element
         $rules[] = [['settings'], ArrayValidator::class];
 
         // Ensure valid settings types are set
-        $rules[] = [['settings'], function($attr, $params){
+        $rules[] = [['settings'], function ($attr, $params) {
             $settingsTypes = VariantConfigurationSetting::VALID_SETTINGS_TYPES;
 
             foreach ($this->$attr as $key => $value) {
-                if( !in_array($key, $settingsTypes) ){
+                if (!in_array($key, $settingsTypes)) {
                     $this->addError('settings', 'Invalid setting "'.$key.'". Expected one of ' . implode(', ', $settingsTypes) . '.');
                 }
             }
         }];
 
         // Ensure valid settings
-        $rules[] = [['settings'], function($attr, $params){
+        $rules[] = [['settings'], function ($attr, $params) {
             foreach ($this->$attr as $type => $setting) {
 
                 // Enforce model constraint
-                if( !$setting instanceof VariantConfigurationSetting ){
+                if (!$setting instanceof VariantConfigurationSetting) {
                     return $this->addError($attr."[$type]", 'Setting must be of type ' . VariantConfigurationSetting::class . '.');
                 }
 
                 // Validate the model
-                if( !$setting->validate() ){
+                if (!$setting->validate()) {
                     $errors = [];
 
                     // Nest settings errors within the "settings" key
@@ -392,7 +393,7 @@ class VariantConfiguration extends Element
      * @author Josh Smith <josh@batch.nz>
      * @return array
      */
-    public function fields()
+    public function fields(): array
     {
         $baseFields = parent::fields();
 
@@ -414,12 +415,12 @@ class VariantConfiguration extends Element
         $baseElementFields = array_intersect_key($baseFields, array_flip($fields));
 
         // Add in the variant count
-        $baseElementFields['numberOfVariants'] = function(){
+        $baseElementFields['numberOfVariants'] = function () {
             return $this->getVariantsCount();
         };
 
         $customElementFields = [];
-        $customElementFields['values'] = function(){
+        $customElementFields['values'] = function () {
             $values = [];
             foreach ($this->fieldLayoutFields() as $field) {
                 $value = $this->getFieldValue($field->handle);
@@ -446,11 +447,11 @@ class VariantConfiguration extends Element
      *
      * @return FieldLayout|null
      */
-    public function getFieldLayout()
+    public function getFieldLayout(): \craft\models\FieldLayout|null
     {
         $variantConfigurationType = $this->getVariantConfigurationType();
 
-        if( $variantConfigurationType ){
+        if ($variantConfigurationType) {
             return $variantConfigurationType->getFieldLayout();
         }
 
@@ -488,7 +489,7 @@ class VariantConfiguration extends Element
         // Load the custom fields
         $fields = $this
             ->getFieldLayout()
-            ->getFields();
+            ->getCustomFields();
 
         // Create a mapping of custom field values
         $fieldHandles = array_column($fields, 'handle');
@@ -543,7 +544,9 @@ class VariantConfiguration extends Element
         $defaultValue = $defaultValue ?? 'null';
 
         $settings = $this->settings[$type] ?? null;
-        if( empty($settings) ) return null;
+        if (empty($settings)) {
+            return null;
+        }
 
         // Normalize the settings value
         $value = $settings->normalizeValue($fields);
@@ -552,7 +555,9 @@ class VariantConfiguration extends Element
         $variables = [];
         foreach ($fields as $handle => $elementId) {
             $element = Craft::$app->getElements()->getElementById($elementId);
-            if( empty($element) ) continue;
+            if (empty($element)) {
+                continue;
+            }
             $variables[$handle] = str_replace(' ', '-', $element->title);
         }
 
@@ -574,7 +579,7 @@ class VariantConfiguration extends Element
     public function normalizeVariantFieldValues(array $fields)
     {
         foreach ($fields as $handle => &$value) {
-            if( $this->getFieldByHandle($handle) instanceof BaseRelationField ){
+            if ($this->getFieldByHandle($handle) instanceof BaseRelationField) {
                 $value = [$value];
             }
         }
@@ -591,14 +596,14 @@ class VariantConfiguration extends Element
         $request = Craft::$app->getRequest();
         $bodyParams = $request->getBodyParam($key);
 
-        if( empty($bodyParams) ){
+        if (empty($bodyParams)) {
             return $this;
         }
 
         $settings = [];
-        foreach ($bodyParams as $key => $value) {
-            $settings[$key] = new VariantConfigurationSetting;
-            $settings[$key]->setAttributes($value);
+        foreach ($bodyParams as $i => $value) {
+            $settings[$i] = new VariantConfigurationSetting();
+            $settings[$i]->setAttributes($value);
         }
         $this->settings = $settings;
 
@@ -656,14 +661,14 @@ class VariantConfiguration extends Element
      *
      * @return void
      */
-    public function afterSave(bool $isNew)
+    public function afterSave(bool $isNew): void
     {
-         if (!$this->propagating) {
+        if (!$this->propagating) {
             if (!$isNew) {
                 $record = VariantConfigurationRecord::findOne($this->id);
 
                 if (!$record) {
-                    throw new Exception('Invalid variant configuration ID: ' . $this->id);
+                    throw new \Exception('Invalid variant configuration ID: ' . $this->id);
                 }
             } else {
                 $record = new VariantConfigurationRecord();
@@ -672,16 +677,16 @@ class VariantConfiguration extends Element
 
             $record->productId = $this->productId;
             $record->typeId = $this->typeId;
-            $record->fields = (empty($this->fields) ? NULL : Json::encode($this->fields));
-            $record->settings = (empty($this->settings) ? NULL : Json::encode($this->settings));
-            $record->variants = (empty($this->variants) ? NULL : Json::encode($this->variants));
+            $record->fields = (empty($this->fields) ? null : Json::encode($this->fields));
+            $record->settings = (empty($this->settings) ? null : Json::encode($this->settings));
+            $record->variants = (empty($this->variants) ? null : Json::encode($this->variants));
 
             $record->save(false);
 
             $this->id = $record->id;
         }
 
-        return parent::afterSave($isNew);
+        parent::afterSave($isNew);
     }
 
     /**
@@ -699,7 +704,7 @@ class VariantConfiguration extends Element
      *
      * @return void
      */
-    public function afterDelete()
+    public function afterDelete(): void
     {
     }
 }

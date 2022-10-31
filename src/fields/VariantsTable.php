@@ -10,13 +10,11 @@
 
 namespace batchnz\craftcommerceuntitled\fields;
 
-use batchnz\craftcommerceuntitled\Plugin;
 use batchnz\craftcommerceuntitled\assetbundles\variantstablefield\VariantsTableFieldAsset;
 
 use Craft;
 use craft\base\ElementInterface;
 use craft\base\Field;
-use craft\helpers\Db;
 use yii\db\Schema;
 use craft\helpers\Json;
 
@@ -71,7 +69,7 @@ class VariantsTable extends Field
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         $rules = array_merge($rules, [
@@ -110,7 +108,7 @@ class VariantsTable extends Field
      *
      * @return mixed The prepared field value
      */
-    public function normalizeValue($value, ElementInterface $element = null)
+    public function normalizeValue($value, ElementInterface $element = null): mixed
     {
         return $value;
     }
@@ -125,7 +123,7 @@ class VariantsTable extends Field
      * @param ElementInterface|null $element The element the field is associated with, if there is one
      * @return mixed The serialized field value
      */
-    public function serializeValue($value, ElementInterface $element = null)
+    public function serializeValue($value, ElementInterface $element = null): mixed
     {
         return parent::serializeValue($value, $element);
     }
@@ -222,7 +220,7 @@ class VariantsTable extends Field
      *
      * @return string|null
      */
-    public function getSettingsHtml()
+    public function getSettingsHtml(): null|string
     {
         // Render the settings template
         return Craft::$app->getView()->renderTemplate(

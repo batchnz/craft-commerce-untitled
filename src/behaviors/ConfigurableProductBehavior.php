@@ -20,7 +20,9 @@ class ConfigurableProductBehavior extends Behavior
     public function getVariantType(): string
     {
         $product = Product::findOne($this->owner->id);
-        if( empty($product) ) return ProductVariantType::Standard;
+        if (empty($product)) {
+            return ProductVariantType::Standard;
+        }
 
         return $product->variantType;
     }

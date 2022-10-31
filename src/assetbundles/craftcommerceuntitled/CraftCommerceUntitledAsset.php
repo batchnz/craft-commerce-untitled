@@ -67,7 +67,7 @@ class CraftCommerceUntitledAsset extends AssetBundle
         ];
 
         // Load the correct webpack files
-        if( Craft::$app->getConfig()->general->devMode && $this->hasDevServer() ){
+        if (Craft::$app->getConfig()->general->devMode && $this->hasDevServer()) {
             $this->js[] = ManifestHelper::getModule($twigpackConfig, 'app.js');
         // Use production files
         } else {
@@ -80,9 +80,9 @@ class CraftCommerceUntitledAsset extends AssetBundle
         parent::init();
     }
 
-     /**
-     * @inheritdoc
-     */
+    /**
+    * @inheritdoc
+    */
     public function registerAssetFiles($view)
     {
         parent::registerAssetFiles($view);

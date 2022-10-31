@@ -22,8 +22,8 @@ use craft\helpers\Json;
 /**
  * Query class for the variant configuration query element
  */
-class VariantConfigurationQuery extends ElementQuery {
-
+class VariantConfigurationQuery extends ElementQuery
+{
     /**
      * @var integer The configuration type ID
      */
@@ -109,13 +109,12 @@ class VariantConfigurationQuery extends ElementQuery {
             $element->variants = Json::decodeIfJson($element->variants);
 
             // Populate the variant configuration settings
-            if( is_array($element->settings) ){
+            if (is_array($element->settings)) {
                 foreach ($element->settings as $key => $setting) {
                     $element->settings[$key] = new VariantConfigurationSetting($setting);
                 }
             }
-
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             // Swallow it whole
         }
 

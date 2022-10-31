@@ -11,13 +11,10 @@
 namespace batchnz\craftcommerceuntitled\services;
 
 use batchnz\craftcommerceuntitled\Plugin;
-use batchnz\craftcommerceuntitled\elements\VariantConfiguration;
 use batchnz\craftcommerceuntitled\records\VariantConfigurationType;
 
 use Craft;
 use craft\base\Component;
-use craft\helpers\StringHelper;
-use craft\models\FieldLayout;
 
 use craft\commerce\events\ProductTypeEvent;
 
@@ -51,11 +48,11 @@ class VariantConfigurationTypes extends Component
     {
         $variantConfigurationTypeRecord = VariantConfigurationType::findOne($id);
 
-        if( empty($variantConfigurationTypeRecord) ){
+        if (empty($variantConfigurationTypeRecord)) {
             throw new Exception('Failed to load variant configuration type record.');
         }
 
-        $variantConfigurationType = new VariantConfigurationType;
+        $variantConfigurationType = new VariantConfigurationType();
         $variantConfigurationType->attributes = $variantConfigurationTypeRecord->toArray();
 
         return $variantConfigurationType;
@@ -73,7 +70,7 @@ class VariantConfigurationTypes extends Component
             'productTypeId' => $productTypeId
         ]);
 
-        if( empty($variantConfigurationType) ){
+        if (empty($variantConfigurationType)) {
             throw new Exception('Failed to load variant configuration record');
         }
 
@@ -124,7 +121,7 @@ class VariantConfigurationTypes extends Component
 
         try {
             $variantConfigurationType = $this->getVariantConfigurationTypeByProductTypeId($productType->id);
-        } catch(Exception $e){
+        } catch (Exception $e) {
             $variantConfigurationType = new VariantConfigurationType([
                 'productTypeId' => $productType->id
             ]);

@@ -4,7 +4,6 @@ namespace batchnz\craftcommerceuntitled\migrations;
 
 use batchnz\craftcommerceuntitled\records\VariantConfiguration;
 
-use Craft;
 use craft\db\Migration;
 
 /**

@@ -13,7 +13,6 @@ namespace batchnz\craftcommerceuntitled\tests\unit;
 use Codeception\Test\Unit;
 use UnitTester;
 use Craft;
-use batchnz\craftcommerceuntitled\Plugin;
 
 /**
  * ExampleUnitTest

@@ -17,7 +17,7 @@ use batchnz\craftcommerceuntitled\models\commerce\ConfigurableProductType;
 use batchnz\craftcommerceuntitled\records\Product;
 
 use Craft;
-use craft\base\Component;
+use craft\commerce\models\ProductType;
 use craft\events\ModelEvent;
 use craft\events\TemplateEvent;
 use craft\web\View;
@@ -38,11 +38,11 @@ class Products extends CommerceProductsService
     // Public Methods
     // =========================================================================
 
-    public function getProductById(int $id, $siteId = null)
+    public function getProductById(int $id, ?int $siteId = null): ?craft\commerce\elements\Product
     {
         $productConfiguration = Product::find()->where(['id' => $id])->one();
 
-        if( !empty($productConfiguration) && $productConfiguration->variantType === ProductVariantType::Configurable ){
+        if (!empty($productConfiguration) && $productConfiguration->variantType === ProductVariantType::Configurable) {
             $class = ConfigurableProduct::class;
         } else {
             $class = CommerceProduct::class;
@@ -64,19 +64,24 @@ class Products extends CommerceProductsService
     public function handleProductBeforeRenderPageTemplateEvent(TemplateEvent $e)
     {
         // Only run this method on the _edit template
-        if( $e->template !== 'commerce/products/_edit' ) return;
+        if ($e->template !== 'commerce/products/_edit') {
+            return;
+        }
 
         $view = Craft::$app->getView();
         $scripts = $view->js[View::POS_READY];
 
         $product = $e->variables['product'];
+        /** @var ProductType $productType */
         $productType = $e->variables['productType'];
 
         // Nothing to do for standard product variant types...
-        if( !($product->getVariantType() === ProductVariantType::Configurable) ) return;
+        if (!($product->getVariantType() === ProductVariantType::Configurable)) {
+            return;
+        }
 
         // Create a new instance of the plugin's ConfigurableProductType model
-        $configurableProductType = new ConfigurableProductType($productType);
+        $configurableProductType = new ConfigurableProductType($productType->toArray());
 
         // Create the configurable tab menu and fields HTML
         $form = $configurableProductType->getProductFieldLayout()->createForm($product);
@@ -103,10 +108,10 @@ class Products extends CommerceProductsService
         $commerceProduct = $e->sender;
         $variantType = $commerceProduct->getVariantType();
 
-        if( $variantType === '' )
-
-        if( !empty($variantType) ){
-            $this->saveProductVariantType($commerceProduct, $variantType);
+        if ($variantType === '') {
+            if (!empty($variantType)) {
+                $this->saveProductVariantType($commerceProduct, $variantType);
+            }
         }
     }
 
@@ -123,13 +128,13 @@ class Products extends CommerceProductsService
         $product = Product::findOne($commerceProduct->id);
 
         // ...And create a new one if we couldn't find one
-        if( empty($product) ){
+        if (empty($product)) {
             $product = new Product();
             $product->id = $commerceProduct->id;
         }
 
         // Save the variant type if it exists in the request
-        if( !empty($variantType) ){
+        if (!empty($variantType)) {
             $product->variantType = $variantType;
         }
 

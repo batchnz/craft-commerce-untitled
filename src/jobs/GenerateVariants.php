@@ -10,8 +10,6 @@
 
 namespace batchnz\craftcommerceuntitled\jobs;
 
-use batchnz\craftcommerceuntitled\Plugin;
-
 use Craft;
 use craft\queue\BaseJob;
 
@@ -67,7 +65,7 @@ class GenerateVariants extends BaseJob
      *
      * More info: https://github.com/yiisoft/yii2-queue
      */
-    public function execute($queue)
+    public function execute($queue): void
     {
         // Do work here
     }

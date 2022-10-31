@@ -22,7 +22,7 @@
         }
     ],
     "require-dev": {
-        "craftcms/cms": "^3.5",
+        "craftcms/cms": "^3.5 || ^4.0.0",
         "codeception/codeception": "^3.0",
         "vlucas/phpdotenv": "^3.0",
         "nystudio107/craft-twigpack": "^1.2"

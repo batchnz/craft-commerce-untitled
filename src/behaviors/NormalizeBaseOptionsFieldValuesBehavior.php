@@ -2,8 +2,6 @@
 
 namespace batchnz\craftcommerceuntitled\behaviors;
 
-use batchnz\craftcommerceuntitled\behaviors\NormalizeBaseFieldValuesBehavior;
-
 /**
  * Behavior that adds methods that normalize all values on a base options field
  */

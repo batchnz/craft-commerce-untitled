@@ -12,10 +12,7 @@ namespace batchnz\craftcommerceuntitled\models\commerce;
 use batchnz\craftcommerceuntitled\fieldlayoutelements\VariantsField;
 
 use Craft;
-use craft\helpers\ArrayHelper;
-use craft\helpers\StringHelper;
 use craft\models\FieldLayout;
-use craft\models\FieldLayoutTab;
 
 use craft\commerce\fieldlayoutelements\VariantsField as CommerceVariantsField;
 use craft\commerce\models\ProductType as CommerceProductType;
@@ -32,15 +29,18 @@ class ConfigurableProductType extends CommerceProductType
     public function getProductFieldLayout(): FieldLayout
     {
         $fieldLayout = parent::getProductFieldLayout();
+        $elementsToUpdate = [];
 
         // Loop tabs that exist on this product field layout
         foreach ($fieldLayout->getTabs() as &$tab) {
-            foreach ($tab->elements as $i => $element) {
+            foreach ($tab->elements as $i =>  $element) {
                 // Target elements that are instances of the commerce variants field
-                if( $element instanceof CommerceVariantsField ){
+                if ($element instanceof CommerceVariantsField) {
                     // Swap out the the element for an instance
                     // of our own so we can render custom HTML on the layout
-                    $tab->elements[$i] = new VariantsField($element);
+                    $elements = $tab->elements;
+                    $elements[$i] = new VariantsField($element->toArray());
+                    $tab->setElements($elements);
                 }
             }
         }

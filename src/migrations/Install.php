@@ -17,7 +17,6 @@ use batchnz\craftcommerceuntitled\records\VariantConfiguration;
 use batchnz\craftcommerceuntitled\records\VariantConfigurationType;
 
 use Craft;
-use craft\config\DbConfig;
 use craft\db\Migration;
 use craft\db\Table;
 
@@ -252,7 +251,9 @@ class Install extends Migration
             ->getProductTypes()
             ->getAllProductTypes();
 
-        if( empty($productTypes) ) return;
+        if (empty($productTypes)) {
+            return;
+        }
 
         foreach ($productTypes as $productType) {
             // Create a new variant configuration type

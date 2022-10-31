@@ -16,7 +16,6 @@ use batchnz\craftcommerceuntitled\records\VariantConfigurationType;
 use Craft;
 
 use yii\rest\Controller;
-use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 
 /**
@@ -43,11 +42,11 @@ class VariantConfigurationTypesController extends Controller
         // Initialise a blank variant configuration query
         $variantConfigurationTypesQuery = VariantConfigurationType::find();
 
-        if( $id = $this->request->getQueryParam('id') ){
+        if ($id = $this->request->getQueryParam('id')) {
             $variantConfigurationTypesQuery->where(['id' => $id]);
         }
 
-        if( $productTypeId = $this->request->getQueryParam('productTypeId') ){
+        if ($productTypeId = $this->request->getQueryParam('productTypeId')) {
             $variantConfigurationTypesQuery->where(['productTypeId' => $productTypeId]);
         }
 
@@ -69,26 +68,28 @@ class VariantConfigurationTypesController extends Controller
     {
         $variantConfigurationTypesQuery = VariantConfigurationType::find();
 
-        if( $id = $this->request->getQueryParam('id') ){
+        if ($id = $this->request->getQueryParam('id')) {
             $variantConfigurationTypesQuery->where(['id' => $id]);
         }
 
-        if( $productTypeId = $this->request->getQueryParam('productTypeId') ){
+        if ($productTypeId = $this->request->getQueryParam('productTypeId')) {
             $variantConfigurationTypesQuery->where(['productTypeId' => $productTypeId]);
         }
 
         // Fetch the first matching record
         $variantConfigurationType = $variantConfigurationTypesQuery->one();
 
-        if( empty($variantConfigurationType) )
+        if (empty($variantConfigurationType)) {
             throw new NotFoundHttpException('Variant Configuration Type could not be found.');
+        }
 
         $fieldLayout = Craft::$app
             ->getFields()
             ->getLayoutById($variantConfigurationType->fieldLayoutId);
 
-        if( empty($fieldLayout) )
+        if (empty($fieldLayout)) {
             throw new NotFoundHttpException('Variant Configuration Type Field Layout could not be found.');
+        }
 
         // Parse out the different fields and available options from the layout
         $fieldData = Plugin::getInstance()

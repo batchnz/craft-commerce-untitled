@@ -29,8 +29,6 @@ use craft\base\Plugin as CraftPlugin;
 use craft\base\Element;
 use craft\base\Field;
 use craft\events\DefineBehaviorsEvent;
-use craft\events\ModelEvent;
-use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\TemplateEvent;
@@ -44,7 +42,6 @@ use craft\web\View;
 use craft\web\UrlManager;
 
 use craft\commerce\Plugin as Commerce;
-use craft\commerce\models\ProductType;
 use craft\commerce\elements\Product as CommerceProduct;
 use craft\commerce\events\ProductTypeEvent;
 use craft\commerce\services\ProductTypes;
@@ -96,21 +93,21 @@ class Plugin extends CraftPlugin
      *
      * @var string
      */
-    public $schemaVersion = '1.0.1';
+    public string $schemaVersion = '1.0.1';
 
     /**
      * Set to `true` if the plugin should have a settings view in the control panel.
      *
      * @var bool
      */
-    public $hasCpSettings = false;
+    public bool $hasCpSettings = false;
 
     /**
      * Set to `true` if the plugin should have its own section (main nav item) in the control panel.
      *
      * @var bool
      */
-    public $hasCpSection = false;
+    public bool $hasCpSection = false;
 
     /**
      * Define the current API version
@@ -201,7 +198,7 @@ class Plugin extends CraftPlugin
      *
      * @return \craft\base\Model|null
      */
-    protected function createSettingsModel()
+    protected function createSettingsModel(): ?craft\base\Model
     {
         return new Settings();
     }
@@ -247,8 +244,9 @@ class Plugin extends CraftPlugin
     {
         // Craft Base Field Behaviors
         Event::on(
-            Field::class, Field::EVENT_DEFINE_BEHAVIORS,
-            function(DefineBehaviorsEvent $event) {
+            Field::class,
+            Field::EVENT_DEFINE_BEHAVIORS,
+            function (DefineBehaviorsEvent $event) {
                 $event->sender->attachBehaviors([
                     NormalizeBaseFieldValuesBehavior::class
                 ]);
@@ -257,8 +255,9 @@ class Plugin extends CraftPlugin
 
         // Craft Base Relation Field Behaviors
         Event::on(
-            BaseRelationField::class, BaseRelationField::EVENT_DEFINE_BEHAVIORS,
-            function(DefineBehaviorsEvent $event) {
+            BaseRelationField::class,
+            BaseRelationField::EVENT_DEFINE_BEHAVIORS,
+            function (DefineBehaviorsEvent $event) {
                 $event->sender->attachBehaviors([
                     NormalizeBaseRelationFieldValuesBehavior::class
                 ]);
@@ -267,8 +266,9 @@ class Plugin extends CraftPlugin
 
         // Craft Base Options Field Behaviors
         Event::on(
-            BaseOptionsField::class, BaseOptionsField::EVENT_DEFINE_BEHAVIORS,
-            function(DefineBehaviorsEvent $event) {
+            BaseOptionsField::class,
+            BaseOptionsField::EVENT_DEFINE_BEHAVIORS,
+            function (DefineBehaviorsEvent $event) {
                 $event->sender->attachBehaviors([
                     NormalizeBaseOptionsFieldValuesBehavior::class
                 ]);
@@ -277,8 +277,9 @@ class Plugin extends CraftPlugin
 
         // Craft Commerce Product Behaviors
         Event::on(
-            CommerceProduct::class, CommerceProduct::EVENT_DEFINE_BEHAVIORS,
-            function(DefineBehaviorsEvent $event) {
+            CommerceProduct::class,
+            CommerceProduct::EVENT_DEFINE_BEHAVIORS,
+            function (DefineBehaviorsEvent $event) {
                 $event->sender->attachBehaviors([
                     ConfigurableProductBehavior::class
                 ]);
@@ -293,7 +294,7 @@ class Plugin extends CraftPlugin
      */
     private function _registerEvents()
     {
-         // Register API routes
+        // Register API routes
         Event::on(
             UrlManager::class,
             UrlManager::EVENT_REGISTER_SITE_URL_RULES,
@@ -348,14 +349,18 @@ class Plugin extends CraftPlugin
         );
 
         // Register our elements
-        Event::on(Elements::class, Elements::EVENT_REGISTER_ELEMENT_TYPES,
+        Event::on(
+            Elements::class,
+            Elements::EVENT_REGISTER_ELEMENT_TYPES,
             function (RegisterComponentTypesEvent $event) {
                 $event->types[] = VariantConfigurationElement::class;
             }
         );
 
         // Register our fields
-        Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES,
+        Event::on(
+            Fields::class,
+            Fields::EVENT_REGISTER_FIELD_TYPES,
             function (RegisterComponentTypesEvent $event) {
                 $event->types[] = VariantsTableField::class;
             }
@@ -367,20 +372,24 @@ class Plugin extends CraftPlugin
          * so we're setting the variants body param to an empty array and injecting the current set of
          * variants on to the product element within the Product::EVENT_BEFORE_SAVE event.
          */
-        Craft::$app->on(Application::EVENT_INIT, function() {
-            if( ! Craft::$app->getRequest()->getIsCpRequest() ) return;
+        Craft::$app->on(Application::EVENT_INIT, function () {
+            if (! Craft::$app->getRequest()->getIsCpRequest()) {
+                return;
+            }
 
             $actionSegments = $this->request->getActionSegments();
-            if( empty($actionSegments) ) return;
+            if (empty($actionSegments)) {
+                return;
+            }
 
-            if(
+            if (
                 count($actionSegments) === 3 &&
                 $actionSegments[0] === 'commerce' &&
                 $actionSegments[1] === 'products' &&
                 $actionSegments[2] === 'save-product'
-            ){
+            ) {
                 $bodyParams = $this->request->getBodyParams();
-                if(isset($bodyParams['variantType']) && $bodyParams['variantType'] === 'configurable') {
+                if (isset($bodyParams['variantType']) && $bodyParams['variantType'] === 'configurable') {
                     $newBodyParams = array_merge($bodyParams, ['variants' => []]);
                     $this->request->setBodyParams($newBodyParams);
                 }
@@ -391,15 +400,15 @@ class Plugin extends CraftPlugin
         Event::on(
             ProductTypes::class,
             ProductTypes::EVENT_AFTER_SAVE_PRODUCTTYPE,
-            function(ProductTypeEvent $e) {
+            function (ProductTypeEvent $e) {
                 $this->getVariantConfigurationTypes()->handleProductTypeAfterSaveEvent($e);
             }
         );
 
         // Handle Craft before page load event
         // We use this event to overwrite the variant tabs with our own custom HTML
-        Event::on(View::class, View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE, function(TemplateEvent $e){
-            if( strpos($e->template, 'commerce/products/') !== false ){
+        Event::on(View::class, View::EVENT_BEFORE_RENDER_PAGE_TEMPLATE, function (TemplateEvent $e) {
+            if (strpos($e->template, 'commerce/products/') !== false) {
                 $this->getProducts()->handleProductBeforeRenderPageTemplateEvent($e);
             }
         });
@@ -407,8 +416,10 @@ class Plugin extends CraftPlugin
         // Handle after plugins loaded event
         // We use this event to re-route product edit routes to our custom controller
         // This allows us to limit the number of variants loaded against a product
-        Event::on(Plugins::class, Plugins::EVENT_AFTER_LOAD_PLUGINS, function(Event $event){
-            if( ! Craft::$app->getRequest()->getIsCpRequest() ) return;
+        Event::on(Plugins::class, Plugins::EVENT_AFTER_LOAD_PLUGINS, function (Event $event) {
+            if (! Craft::$app->getRequest()->getIsCpRequest()) {
+                return;
+            }
 
             // Swap the commerce products service with our own
             Commerce::getInstance()->set('products', [
@@ -431,7 +442,7 @@ class Plugin extends CraftPlugin
      */
     private function _registerHooks()
     {
-        Craft::$app->view->hook('cp.commerce.product.edit.details', function(array &$context) {
+        Craft::$app->view->hook('cp.commerce.product.edit.details', function (array &$context) {
             // Define an array of product variant types
             $context['productVariantTypes'] = [
                 ProductVariantType::Standard => 'Standard',

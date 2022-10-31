@@ -10,9 +10,6 @@
 
 namespace batchnz\craftcommerceuntitled\records;
 
-use batchnz\craftcommerceuntitled\Plugin;
-
-use Craft;
 use craft\behaviors\FieldLayoutBehavior;
 use craft\db\ActiveRecord;
 
@@ -30,11 +27,11 @@ class VariantConfigurationType extends ActiveRecord
     // Public Static Methods
     // =========================================================================
 
-     /**
-      * The table name for this AR class
-      * @author Josh Smith <josh@batch.nz>
-      * @return string
-      */
+    /**
+     * The table name for this AR class
+     * @author Josh Smith <josh@batch.nz>
+     * @return string
+     */
     public static function tableName()
     {
         return '{{%commerce_untitled_variantconfiguration_types}}';
@@ -43,7 +40,7 @@ class VariantConfigurationType extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function behaviors(): array
     {
         $behaviors = parent::behaviors();
         $behaviors['fieldLayout'] = [
@@ -72,7 +69,7 @@ class VariantConfigurationType extends ActiveRecord
      */
     public function rules()
     {
-        if( $this->getIsNewRecord() ){
+        if ($this->getIsNewRecord()) {
             return [
                 [['productTypeId', 'fieldLayoutId'], 'required']
             ];

@@ -2,7 +2,6 @@
 
 namespace batchnz\craftcommerceuntitledtests\acceptance;
 
-use Craft;
 use FunctionalTester;
 
 class ExampleFunctionalCest

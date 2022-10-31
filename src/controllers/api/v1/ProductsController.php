@@ -11,14 +11,11 @@
 namespace batchnz\craftcommerceuntitled\controllers\api\v1;
 
 use batchnz\craftcommerceuntitled\Plugin;
-use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationModel;
-use batchnz\craftcommerceuntitled\helpers\VariantConfiguration as VariantConfigurationHelper;
 
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\elements\Variant;
 
 use Craft;
-use craft\elements\db\Element;
 
 use yii\rest\Controller;
 use yii\web\BadRequestHttpException;
@@ -34,7 +31,6 @@ use yii\web\NotFoundHttpException;
  */
 class ProductsController extends Controller
 {
-
     // Public Methods
     // =========================================================================
 
@@ -46,10 +42,14 @@ class ProductsController extends Controller
     public function actionSaveTypes($id)
     {
         $product = Commerce::getInstance()->getProducts()->getProductById($id);
-        if( empty($product) ) throw new NotFoundHttpException('Product not found');
+        if (empty($product)) {
+            throw new NotFoundHttpException('Product not found');
+        }
 
         $variantType = Craft::$app->getRequest()->getBodyParam('variantType');
-        if( empty($variantType) ) throw new BadRequestHttpException('Variant Type is missing');
+        if (empty($variantType)) {
+            throw new BadRequestHttpException('Variant Type is missing');
+        }
 
         $result = Plugin::getInstance()->getProducts()->saveProductVariantType($product, $variantType);
 

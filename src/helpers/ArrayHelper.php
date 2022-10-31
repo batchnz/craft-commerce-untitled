@@ -2,8 +2,6 @@
 
 namespace batchnz\craftcommerceuntitled\helpers;
 
-use batchnz\craftcommerceuntitled\Plugin;
-
 /**
  * Array Helper class
  * @since  1.0.0
@@ -22,11 +20,13 @@ class ArrayHelper
         $result = [[]];
 
         foreach ($input as $key => $values) {
-            if( empty(array_filter($values)) ) continue;
+            if (empty(array_filter($values))) {
+                continue;
+            }
 
             $append = [];
-            foreach($result as $product) {
-                foreach($values as $item) {
+            foreach ($result as $product) {
+                foreach ($values as $item) {
                     $product[$key] = $item;
                     $append[] = $product;
                 }

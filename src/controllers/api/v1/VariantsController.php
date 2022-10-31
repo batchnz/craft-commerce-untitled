@@ -12,11 +12,10 @@ namespace batchnz\craftcommerceuntitled\controllers\api\v1;
 
 use batchnz\craftcommerceuntitled\Plugin;
 
+use craft\base\Element;
 use craft\commerce\Plugin as Commerce;
 use craft\commerce\elements\Variant;
 use craft\commerce\helpers\Currency as CurrencyHelper;
-
-use craft\elements\db\Element;
 
 use yii\rest\Controller;
 use yii\web\NotFoundHttpException;
@@ -60,7 +59,7 @@ class VariantsController extends Controller
 
         // Fetch the fields on the variant field layout
         $variantFieldLayout = $product->getType()->getVariantFieldLayout();
-        $fields = array_column($variantFieldLayout->getFields(), 'handle');
+        $fields = array_column($variantFieldLayout->getCustomFields(), 'handle');
 
         // Fetch variants with eager loaded fields
         $variants = Variant::find()
@@ -103,14 +102,10 @@ class VariantsController extends Controller
     private function _getVariantFieldValues(Variant $variant, array $fields): array
     {
         return array_map(function ($field) use ($variant) {
-            if (!is_array($variant->$field)) {
-                $variant->$field = [$variant->$field];
-            };
-
             // Return element titles or just the value
             $values = array_map(function ($value) {
                 return $value instanceof Element ? $value->title : $value;
-            }, $variant->$field);
+            }, $variant->$field->toArray());
 
             return implode(', ', $values);
         }, $fields) ?? [];

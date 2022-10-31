@@ -2,8 +2,6 @@
 
 namespace batchnz\craftcommerceuntitled\models;
 
-use batchnz\craftcommerceuntitled\elements\VariantConfiguration as VariantConfigurationModel;
-
 use craft\base\Model;
 use craft\commerce\elements\Variant;
 use craft\commerce\elements\db\VariantQuery;
@@ -56,7 +54,9 @@ class VariantConfigurationSetting extends Model
      */
     protected function normalizeFieldValue(array $fields)
     {
-        if( !array_key_exists($this->field, $fields) ) return null;
+        if (!array_key_exists($this->field, $fields)) {
+            return null;
+        }
 
         $elementId = $fields[$this->field] ?? null;
         $value = $this->values[$elementId] ?? null;
@@ -76,7 +76,7 @@ class VariantConfigurationSetting extends Model
         switch ($this->method) {
             // Populates the variant query with field values
             case 'field':
-                if( !empty($this->field) && is_array($this->values) ){
+                if (!empty($this->field) && is_array($this->values)) {
                     $variantQuery->{$this->field}(array_keys($this->values));
                 }
                 break;
@@ -93,7 +93,7 @@ class VariantConfigurationSetting extends Model
      * @author Josh Smith <josh@batch.nz>
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         $rules[] = ['method', 'required'];
@@ -101,16 +101,18 @@ class VariantConfigurationSetting extends Model
         $rules[] = ['method', 'in', 'range' => self::VALID_SETTINGS_METHODS, 'message' => 'Invalid setting "{value}". Expected one of ' . implode(', ', self::VALID_SETTINGS_METHODS) . '.'];
 
         // Ensure a field handle is passed when the method is "field"
-        $rules[] = ['field', function($attr, $params){
-            if( $this->method === 'field' && empty($this->$attr) ){
+        $rules[] = ['field', function ($attr, $params) {
+            if ($this->method === 'field' && empty($this->$attr)) {
                 $this->addError($attr, 'Field handle cannot be blank.');
             }
         }, 'skipOnEmpty' => false];
 
         // Ensure values are passed when the method is "field"
-        $rules[] = ['values', function($attr, $params){
-            if( $this->method !== 'field' ) return;
-            if( !is_array($this->$attr) ){
+        $rules[] = ['values', function ($attr, $params) {
+            if ($this->method !== 'field') {
+                return;
+            }
+            if (!is_array($this->$attr)) {
                 $this->addError($attr, 'Values must be an array.');
             }
         }, 'skipOnEmpty' => false];

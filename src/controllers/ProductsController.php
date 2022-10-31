@@ -1,11 +1,9 @@
 <?php
 
-
 namespace batchnz\craftcommerceuntitled\controllers;
 
 use batchnz\craftcommerceuntitled\Plugin;
 use batchnz\craftcommerceuntitled\enums\ProductVariantType;
-use batchnz\craftcommerceuntitled\elements\ConfigurableProduct;
 use batchnz\craftcommerceuntitled\assetbundles\craftcommerceuntitled\CraftCommerceUntitledAsset as CraftCommerceUntitledBundle;
 
 use Craft;
@@ -16,7 +14,6 @@ use craft\commerce\Plugin as Commerce;
 use craft\commerce\controllers\ProductsController as CommerceProductsController;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
-use craft\commerce\helpers\Product as ProductHelper;
 
 use yii\base\Exception;
 use yii\web\Response;
@@ -87,7 +84,7 @@ class ProductsController extends CommerceProductsController
         });');
 
         // Run the standard controller if this isn't a configurable variant type
-        if( $siteProduct->getVariantType() !== ProductVariantType::Configurable ){
+        if ($siteProduct->getVariantType() !== ProductVariantType::Configurable) {
             return parent::actionEditProduct($productTypeHandle, $productId, $siteHandle, $product);
         }
 

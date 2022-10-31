@@ -15,6 +15,6 @@ abstract class ProductVariantType
     /**
      * Define ENUM values as constants
      */
-    const Standard = 'standard';
-    const Configurable = 'configurable';
+    public const Standard = 'standard';
+    public const Configurable = 'configurable';
 }

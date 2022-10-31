@@ -10,9 +10,6 @@
 
 namespace batchnz\craftcommerceuntitled\services;
 
-use batchnz\craftcommerceuntitled\Plugin;
-
-use Craft;
 use craft\base\Component;
 use craft\models\FieldLayout;
 
@@ -37,7 +34,7 @@ class Fields extends Component
     public function getLayoutFieldData(FieldLayout $fieldLayout): array
     {
         $fieldData = [];
-        foreach ($fieldLayout->getFields() as $field) {
+        foreach ($fieldLayout->getCustomFields() as $field) {
             $fieldData[] = [
                 'name' => $field->name,
                 'handle' => $field->handle,

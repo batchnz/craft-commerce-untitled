@@ -80,7 +80,6 @@ class VariantConfigurations extends Component
         }
 
         foreach ($permutation as $i => $fieldValues) {
-
             // Normalize variant attributes
             $price = $configuration->normalizeSettingsValue('price', $fieldValues, 0.00);
             $stock = $configuration->normalizeSettingsValue('stock', $fieldValues, null);

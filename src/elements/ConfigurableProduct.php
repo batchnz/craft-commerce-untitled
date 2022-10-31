@@ -5,7 +5,6 @@ namespace batchnz\craftcommerceuntitled\elements;
 use craft\commerce\elements\Product as CommerceProduct;
 use craft\commerce\records\Product as ProductRecord;
 
-use Craft;
 use craft\base\element;
 
 class ConfigurableProduct extends CommerceProduct
@@ -21,7 +20,7 @@ class ConfigurableProduct extends CommerceProduct
 
         // Remove variant validation
         foreach ($rules as $key => $rule) {
-            if( $rule[0][0] === 'variants' ){
+            if ($rule[0][0] === 'variants') {
                 unset($rules[$key]);
             }
         }
@@ -29,17 +28,17 @@ class ConfigurableProduct extends CommerceProduct
         return $rules;
     }
 
-   /**
-     * @inheritdoc
-     */
-    public function afterSave(bool $isNew)
+    /**
+      * @inheritdoc
+      */
+    public function afterSave(bool $isNew): void
     {
         if (!$this->propagating) {
             if (!$isNew) {
                 $record = ProductRecord::findOne($this->id);
 
                 if (!$record) {
-                    throw new Exception('Invalid product ID: ' . $this->id);
+                    throw new \Exception('Invalid product ID: ' . $this->id);
                 }
             } else {
                 $record = new ProductRecord();
@@ -73,6 +72,6 @@ class ConfigurableProduct extends CommerceProduct
             $this->id = $record->id;
         }
 
-        return Element::afterSave($isNew);
+        Element::afterSave($isNew);
     }
 }
