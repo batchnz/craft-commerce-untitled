@@ -72,7 +72,7 @@ const transformResponse = (response = []) => {
     for (const [key, value] of Object.entries(vc.values)) {
       values = values.concat(vc.values[key]);
     }
-    vc.values = values;
+    vc.values = values.map(value => value.toString());
   });
 };
 
