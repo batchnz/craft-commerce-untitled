@@ -40,7 +40,7 @@ class NormalizeBaseRelationFieldValuesBehavior extends NormalizeBaseFieldValuesB
         // Fetch elements with enough data to represent in the UI
         $elements = [];
         foreach ($elementQuery->all() as $el) {
-            $el[] = [
+            $elements[] = [
                 'label' => $el->title,
                 'value' => (string) $el->id,
             ];
