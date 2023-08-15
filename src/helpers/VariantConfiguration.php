@@ -89,7 +89,7 @@ class VariantConfiguration
         $variantConfiguration->attributes = $request->getBodyParams();
 
         // Set custom field values from the request
-        $variantConfiguration->setFieldValuesFromRequest('values');
+        $variantConfiguration->setFieldValues($request->getBodyParam('values'));
 
         // Set settings from the request
         $variantConfiguration->setSettingsFromRequest('settings');
